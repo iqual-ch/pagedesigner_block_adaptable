@@ -1,5 +1,0 @@
-pagedesigner:
-  js:
-    resources/js/traits/multiplecheckbox.js: {minified: false}
-  dependencies:
-    - pagedesigner/pagedesigner
