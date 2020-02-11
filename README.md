@@ -1,1 +1,1 @@
-# pagedesigner_block_filter
+# pagedesigner_block_adaptable
