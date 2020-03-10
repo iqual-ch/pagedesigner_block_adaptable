@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ */
+
+use Drupal\pagedesigner\Entity\Element;
+
+/**
+ *
+ */
+function pagedesigner_block_adaptable_update_8001() {
+  $pids = \Drupal::entityQuery('pagedesigner_element')->condition('field_block_settings', '', 'NOT LIKE')->execute();
+  foreach ($pids as $pid) {
+    $element = Element::load($pid);
+    $settings = json_decode($element->field_block_settings->value);
+    $element->field_block_settings->value = json_encode(['filters' => $settings]);
+    $element->save();
+  }
+}
