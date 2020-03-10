@@ -29,7 +29,8 @@ class AdaptableBlock extends Block {
   /**
    * {@inheritdoc}
    */
-  public function collectAttachments(array &$attachments) {}
+  public function collectAttachments(array &$attachments) {
+  }
 
   /**
    * {@inheritDoc}
@@ -46,12 +47,14 @@ class AdaptableBlock extends Block {
   /**
    * {@inheritDoc}
    */
-  public function adaptPatterns(array &$patterns) {}
+  public function adaptPatterns(array &$patterns) {
+  }
 
   /**
    * {@inheritdoc}
    */
-  public function prepare(PatternDefinitionField &$field, array &$fieldArray) {}
+  public function prepare(PatternDefinitionField &$field, array &$fieldArray) {
+  }
 
   /**
    *
@@ -73,15 +76,19 @@ class AdaptableBlock extends Block {
     $fields = $pattern->getFields();
     $filters = $view->getDisplay()->getOption('filters');
 
+    $bundleFilter = NULL;
     // Expose the filters from the block so they can be
     // configurable in the pagedesigner for the editor.
     foreach ($filters as $key => $filter) {
-      // Echo $filter['plugin_id'] . "\n";
+      if (empty($filter['exposed'])) {
+        continue;
+      }
       // Create multiple choice for the bundle plugin type.
       if ($filter['plugin_id'] == 'bundle') {
         // Workaround for the content type, because there
         // can not be a key named 'type' in the definition.
         if ($filter['field'] === 'type') {
+          $bundleFilter = $filter;
           $options = [];
           $values = [];
           foreach ($filter['value'] as $key => $option) {
@@ -153,19 +160,72 @@ class AdaptableBlock extends Block {
           'value' => $values,
         ];
       }
+      if ($filter['plugin_id'] == 'numeric') {
+        if ($filter['field'] == 'nid') {
+          $nodes = [];
+          if ($bundleFilter) {
+            $bundles = [];
+            foreach ($bundleFilter['value'] as $key => $option) {
+              $bundles[] = $key;
+            }
+            $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+              'type' => $bundles,
+            ]);
+          }
+          else {
+            $nids = \Drupal::entityQuery('node')->execute();
+            $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($nids);
+          }
+          // $nids = \Drupal::service('entity_type.manager')->getStorage('node')->load($filter['vid'])->label();
+          $options = [];
+          $values = [];
+          foreach ($nodes as $node) {
+            if ($node != NULL) {
+              $options[$node->id()] = $node->label();
+            }
+          }
+          $fields[$filter['field']] = [
+            'description' => 'Choose node',
+            'label' => $filter['expose']['label'],
+            'options' => $options,
+            'type' => 'select',
+            'name' => $filter['field'],
+            'value' => $values,
+          ];
+        }
+      }
     }
+    $pager = $view->getDisplay()->getOption('pager');
+    if ($pager['type'] != 'none') {
+      $fields['items_per_page'] = [
+        'description' => 'Select the number of items per page.',
+        'label' => 'Items per page',
+        'type' => 'text',
+        'name' => 'items_per_page',
+        'value' => $pager['options']['items_per_page'],
+      ];
+    }
+    $fields['offset'] = [
+      'description' => 'Select the offset of items.',
+      'label' => 'Offset',
+      'type' => 'text',
+      'name' => 'offset',
+      'value' => $pager['options']['offset'],
+    ];
     $pattern->setFields($fields);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function get(Element $entity, string &$result = '') {}
+  public function get(Element $entity, string &$result = '') {
+  }
 
   /**
    * {@inheritdoc}
    */
-  public function getContent(Element $entity, array &$list = []) {}
+  public function getContent(Element $entity, array &$list = []) {
+  }
 
   /**
    * {@inheritDoc}
@@ -173,9 +233,16 @@ class AdaptableBlock extends Block {
   public function serialize(Element $entity, &$result = []) {
     $fields = [];
     if ($entity->hasField('field_block_settings') && !$entity->field_block_settings->isEmpty()) {
-      $filters = json_decode($entity->field_block_settings->value, TRUE);
-      foreach ($filters as $key => $item) {
-        $fields[$key] = $item['value'];
+      $settings = json_decode($entity->field_block_settings->value, TRUE);
+      if (!empty($settings['filters'])) {
+        foreach ($settings['filters'] as $key => $item) {
+          $fields[$key] = $item['value'];
+        }
+      }
+      if (!empty($settings['pager'])) {
+        foreach ($settings['pager'] as $key => $item) {
+          $fields[$key] = $item['value'];
+        }
       }
     }
     $result = [
@@ -186,16 +253,24 @@ class AdaptableBlock extends Block {
   /**
    * {@inheritdoc}
    */
-  public function describe(Element $entity, array &$result = []) {}
+  public function describe(Element $entity, array &$result = []) {
+  }
 
   /**
    * {@inheritDoc}
    */
   public function generate($definition, array $data, Element &$entity = NULL) {
+    $this->patch($entity, $data);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function patch(Element $entity, array $data) {
     $block = $entity->field_block->entity;
-    if ($block != NULL) {
+    if ($block != NULL && !empty($data['fields'])) {
       $view_filters = [];
-      $viewInfo = explode('-', explode(':', $block->get('plugin')))[1];
+      $viewInfo = explode('-', explode(':', $block->get('plugin'))[1]);
       $view = Views::getView($viewInfo[0]);
       // Check if there is a view for the block.
       if ($view == NULL) {
@@ -206,96 +281,66 @@ class AdaptableBlock extends Block {
       if ($display == NULL) {
         return;
       }
+      // Take the filter data and apply it to the field of the entity.
       $filters = $display->getOption('filters');
-      foreach ($filters as $key => $filter) {
-        if ($filter['plugin_id'] === 'boolean' || $filter['plugin_id'] === 'string') {
-          $view_filters[$key]['value'] = $filter['value'];
-        }
-        elseif ($filter['plugin_id'] === 'bundle' || $filter['plugin_id'] === 'taxonomy_index_tid') {
-          if ($key == 'type') {
-            $key = 'content_type';
+      foreach ($data['fields'] as $key => $value) {
+        if (isset($filters[$key])) {
+          if ($filters[$key]['plugin_id'] === 'boolean' || $filters[$key]['plugin_id'] === 'string') {
+            $view_filters[$key]['value'] = $value;
           }
-          foreach ($filter['value'] as $filter_key => $item) {
-            if ($item) {
-              $view_filters[$key]['value'][$filter_key] = TRUE;
+          elseif ($filters[$key]['plugin_id'] === 'numeric') {
+            $view_filters[$key]['value'] = $value;
+          }
+          elseif ($filters[$key]['plugin_id'] === 'bundle') {
+            foreach ($value as $filter_key => $item) {
+              if ($item) {
+                $view_filters[$key]['value'][$filter_key] = TRUE;
+              }
+              else {
+                $view_filters[$key]['value'][$filter_key] = FALSE;
+              }
             }
-            else {
-              $view_filters[$key]['value'][$filter_key] = FALSE;
+          }
+          elseif ($filters[$key]['plugin_id'] == 'taxonomy_index_tid') {
+            foreach ($value as $filter_key => $item) {
+              if ($item) {
+                $view_filters[$key]['value'][$filter_key] = TRUE;
+              }
+              else {
+                $view_filters[$key]['value'][$filter_key] = FALSE;
+              }
             }
           }
         }
-      }
-    }
-    $entity->field_block_settings->value = json_encode($view_filters);
-    $entity->save();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function patch(Element $entity, array $data) {
-    $view_filters = [];
-    $viewInfo = explode('-', explode(':', $entity->field_block->entity->get('plugin'))[1]);
-    $view = Views::getView($viewInfo[0]);
-    // Check if there is a view for the block.
-    if ($view == NULL) {
-      return;
-    }
-    $view->setDisplay($viewInfo[1]);
-    $display = $view->getDisplay();
-    if ($display == NULL) {
-      return;
-    }
-    // Take the filter data and apply it to the field of the entity.
-    $filters = $display->getOption('filters');
-    foreach ($data['fields'] as $key => $value) {
-      if (isset($filters[$key])) {
-        if ($filters[$key]['plugin_id'] === 'boolean' || $filters[$key]['plugin_id'] === 'string') {
-          $view_filters[$key]['value'] = $value;
-        }
-        elseif ($filters[$key]['plugin_id'] === 'bundle') {
+        elseif ($key == 'content_type') {
           foreach ($value as $filter_key => $item) {
             if ($item) {
               $view_filters[$key]['value'][$filter_key] = TRUE;
             }
             else {
               $view_filters[$key]['value'][$filter_key] = FALSE;
-            }
-          }
-        }
-        elseif ($filters[$key]['plugin_id'] == 'taxonomy_index_tid') {
-          foreach ($value as $filter_key => $item) {
-            if ($item) {
-              $view_filters[$key]['value'][$filter_key] = TRUE;
-            }
-            else {
-              $view_filters[$key]['value'][$filter_key] = FALSE;
+              $view_filters[$key]['value']['all'] = FALSE;
             }
           }
         }
       }
-      elseif ($key == 'content_type') {
-        foreach ($value as $filter_key => $item) {
-          if ($item) {
-            $view_filters[$key]['value'][$filter_key] = TRUE;
-          }
-          else {
-            $view_filters[$key]['value'][$filter_key] = FALSE;
-            $view_filters[$key]['value']['all'] = FALSE;
-          }
-        }
+      $pagerSettings = [];
+      if (!empty($data['fields']['items_per_page'])) {
+        $pagerSettings['items_per_page'] = $data['fields']['items_per_page'];
       }
+      if (!empty($data['fields']['offset'])) {
+        $pagerSettings['offset'] = $data['fields']['offset'];
+      }
+      $entity->field_block_settings->value = json_encode(['filters' => $view_filters, 'pager' => $pagerSettings]);
+      $entity->save();
     }
-
-    $entity->field_block_settings->value = json_encode($view_filters);
-    $entity->save();
-
   }
 
   /**
    * {@inheritdoc}
    */
   public function copy(Element $entity, Element $container = NULL, Element &$clone = NULL) {
+
   }
 
   /**
