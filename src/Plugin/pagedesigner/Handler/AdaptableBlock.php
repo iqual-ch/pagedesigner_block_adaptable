@@ -197,20 +197,20 @@ class AdaptableBlock extends Block {
     }
     $pager = $view->getDisplay()->getOption('pager');
     if ($pager['type'] != 'none') {
-      $fields['items_per_page'] = [
+      $fields['pager_items_per_page'] = [
         'description' => 'Select the number of items per page.',
-        'label' => 'Items per page',
+        'label' => t('Items per page') . ' (' . t('Default: @value', ['@value' => $pager['options']['items_per_page']]) . ')',
         'type' => 'text',
-        'name' => 'items_per_page',
-        'value' => $pager['options']['items_per_page'],
+        'name' => 'pager_items_per_page',
+        'value' => '',
       ];
     }
-    $fields['offset'] = [
+    $fields['pager_offset'] = [
       'description' => 'Select the offset of items.',
-      'label' => 'Offset',
+      'label' => t('Offset') . ' (' . t('Default: @value', ['@value' => $pager['options']['offset']]) . ')',
       'type' => 'text',
-      'name' => 'offset',
-      'value' => $pager['options']['offset'],
+      'name' => 'pager_offset',
+      'value' => '',
     ];
     $pattern->setFields($fields);
   }
@@ -241,7 +241,7 @@ class AdaptableBlock extends Block {
       }
       if (!empty($settings['pager'])) {
         foreach ($settings['pager'] as $key => $item) {
-          $fields[$key] = $item['value'];
+          $fields['pager_' . $key] = $item['value'];
         }
       }
     }
@@ -324,12 +324,14 @@ class AdaptableBlock extends Block {
           }
         }
       }
+
+      $pager = $display->getOption('pager');
       $pagerSettings = [];
-      if (!empty($data['fields']['items_per_page'])) {
-        $pagerSettings['items_per_page'] = $data['fields']['items_per_page'];
+      if (isset($data['fields']['pager_items_per_page'])) {
+        $pagerSettings['items_per_page'] = $data['fields']['pager_items_per_page'];
       }
-      if (!empty($data['fields']['offset'])) {
-        $pagerSettings['offset'] = $data['fields']['offset'];
+      if (isset($data['fields']['pager_offset'])) {
+        $pagerSettings['offset'] = $data['fields']['pager_offset'];
       }
       $entity->field_block_settings->value = json_encode(['filters' => $view_filters, 'pager' => $pagerSettings]);
       $entity->save();

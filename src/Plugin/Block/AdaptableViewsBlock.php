@@ -105,7 +105,9 @@ class AdaptableViewsBlock extends ViewsBlock {
   protected function alterPager($customPager) {
     $pager = $this->view->getDisplay()->getOption('pager');
     foreach ($customPager as $key => $setting) {
-      $pager['options'][$key] = $setting;
+      if (!empty($setting)) {
+        $pager['options'][$key] = $setting;
+      }
     }
     $this->view->getDisplay()->overrideOption('pager', $pager);
   }
