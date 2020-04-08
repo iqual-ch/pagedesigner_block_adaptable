@@ -4,8 +4,7 @@ namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner\Handler;
 
 use Drupal\pagedesigner\Entity\Element;
 use Drupal\views\Views;
-use Drupal\block\Entity\Block as BlockEntity;
-use Drupal\pagedesigner_block\Plugin\pagedesigner\Handler\Block;
+use Drupal\block\Entity\Block;
 use Drupal\pagedesigner_block_adaptable\AdaptableBlockViewBuilder;
 use Drupal\ui_patterns\Definition\PatternDefinitionField;
 use Drupal\ui_patterns\Definition\PatternDefinition;
@@ -24,7 +23,7 @@ use Drupal\ui_patterns\Definition\PatternDefinition;
  *   weight = 1000,
  * )
  */
-class AdaptableBlock extends Block {
+class AdaptableBlock implements HandlerPluginInterface {
 
   /**
    * {@inheritdoc}
@@ -38,7 +37,7 @@ class AdaptableBlock extends Block {
   public function collectPatterns(array &$patterns) {
     foreach ($patterns as $pattern) {
       if (isset($pattern->getAdditional()['block'])) {
-        $block = BlockEntity::load($pattern->getAdditional()['block']);
+        $block = Block::load($pattern->getAdditional()['block']);
         $this->augmentDefinition($pattern, $block);
       }
     }
@@ -59,7 +58,7 @@ class AdaptableBlock extends Block {
   /**
    *
    */
-  protected function augmentDefinition(PatternDefinition &$pattern, BlockEntity &$block) {
+  protected function augmentDefinition(PatternDefinition &$pattern, Block &$block) {
     if (strpos($block->getPlugin()->pluginId, 'adaptable_views_block') !== 0) {
       return;
     }
