@@ -353,6 +353,12 @@ class AdaptableBlock implements HandlerPluginInterface {
   /**
    * {@inheritdoc}
    */
+  public function restore(Element $entity) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function render(Element $entity, array &$build = []) {
     if ($entity->field_block->entity == NULL) {
       return;
