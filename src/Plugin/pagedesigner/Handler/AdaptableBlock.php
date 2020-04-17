@@ -60,10 +60,11 @@ class AdaptableBlock implements HandlerPluginInterface {
    *
    */
   protected function augmentDefinition(PatternDefinition &$pattern, Block &$block) {
-    if (strpos($block->getPlugin()->pluginId, 'adaptable_views_block') !== 0) {
+    $pluginId = $block->getPluginId();
+    if (strpos($pluginId, 'adaptable_views_block') !== 0) {
       return;
     }
-    $viewInfo = explode('-', explode(':', $block->getPlugin()->pluginId)[1]);
+    $viewInfo = explode('-', explode(':', $pluginId)[1]);
     $view = Views::getView($viewInfo[0]);
     if ($view == NULL) {
       return;
@@ -80,6 +81,11 @@ class AdaptableBlock implements HandlerPluginInterface {
     // Expose the filters from the block so they can be
     // configurable in the pagedesigner for the editor.
     foreach ($filters as $key => $filter) {
+      if ($filter['plugin_id'] == 'bundle') {
+        if ($filter['field'] === 'type') {
+          $bundleFilter = $filter;
+        }
+      }
       if (empty($filter['exposed'])) {
         continue;
       }
