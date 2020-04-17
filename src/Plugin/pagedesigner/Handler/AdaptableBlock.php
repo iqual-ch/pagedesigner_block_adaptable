@@ -8,6 +8,7 @@ use Drupal\block\Entity\Block;
 use Drupal\pagedesigner_block_adaptable\AdaptableBlockViewBuilder;
 use Drupal\ui_patterns\Definition\PatternDefinitionField;
 use Drupal\ui_patterns\Definition\PatternDefinition;
+use Drupal\pagedesigner\Plugin\pagedesigner\HandlerPluginInterface;
 
 /**
  * Process entities of type "block".
