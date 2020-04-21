@@ -182,7 +182,6 @@ class AdaptableBlock implements HandlerPluginInterface {
             $nids = \Drupal::entityQuery('node')->execute();
             $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($nids);
           }
-          // $nids = \Drupal::service('entity_type.manager')->getStorage('node')->load($filter['vid'])->label();
           $options = [];
           $values = [];
           foreach ($nodes as $node) {
@@ -197,6 +196,12 @@ class AdaptableBlock implements HandlerPluginInterface {
             'type' => 'select',
             'name' => $filter['field'],
             'value' => $values,
+          ];
+        }
+        else {
+          $fields[$filter['field']] = [
+            'label' => $filter['field'],
+            'type' => 'text',
           ];
         }
       }
