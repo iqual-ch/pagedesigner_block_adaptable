@@ -197,8 +197,36 @@ class AdaptableBlock implements HandlerPluginInterface {
             'name' => $filter['field'],
             'value' => $values,
           ];
-        }
-        else {
+        }elseif ($filter['field'] == 'tid_raw') {
+          if( isset($filters['vid']) ){
+            $options = [];
+            $values = [];
+            foreach ( $filters['vid']['value'] as $vid => $vocabulary ) {
+              $terms = \Drupal::service('entity_type.manager')
+                ->getStorage('taxonomy_term')
+                ->loadTree($vid);
+
+              foreach ($terms as $term) {
+                if ($term != NULL) {
+                  $options[$term->tid] = $term->name;
+                }
+              }
+            }
+            $fields[$filter['field']] = [
+              'description' => 'Choose term',
+              'label' => $filter['expose']['label'],
+              'options' => $options,
+              'type' => 'select',
+              'name' => $filter['field'],
+              'value' => $values,
+            ];
+          }else{
+            $fields[$filter['field']] = [
+              'label' => $filter['field'],
+              'type' => 'text',
+            ];
+          }
+        } else {
           $fields[$filter['field']] = [
             'label' => $filter['field'],
             'type' => 'text',
