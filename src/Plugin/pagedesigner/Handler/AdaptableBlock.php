@@ -2,6 +2,7 @@
 
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner\Handler;
 
+use Drupal\commerce_product\Entity\Product;
 use Drupal\pagedesigner\Entity\Element;
 use Drupal\views\Views;
 use Drupal\block\Entity\Block;
@@ -226,7 +227,27 @@ class AdaptableBlock implements HandlerPluginInterface {
               'type' => 'text',
             ];
           }
-        } else {
+        } elseif (substr($filter['field'], -3) == '_id') {
+          $entity_type = $filter['entity_type'];
+          $label = substr($filter['field'],0,-3);
+          $items = \Drupal::entityTypeManager()->getStorage($entity_type)->loadMultiple();
+          $options = [];
+          $values = [];
+          foreach ($items as $item) {
+            if ($item != NULL) {
+              $options[$item->id()] = $item->label();
+            }
+          }
+          $fields[$filter['field']] = [
+            'description' => 'Choose ' . $label,
+            'label' => $filter['expose']['label'],
+            'options' => $options,
+            'type' => 'select',
+            'name' => $filter['field'],
+            'value' => $values,
+          ];
+        }
+        else {
           $fields[$filter['field']] = [
             'label' => $filter['field'],
             'type' => 'text',
@@ -269,7 +290,7 @@ class AdaptableBlock implements HandlerPluginInterface {
   /**
    * {@inheritDoc}
    */
-  public function serialize(Element $entity, &$result = []) {
+  public function serialize(Element $entity, array &$result = []) {
     $fields = [];
     if ($entity->hasField('field_block_settings') && !$entity->field_block_settings->isEmpty()) {
       $settings = json_decode($entity->field_block_settings->value, TRUE);
