@@ -2,7 +2,6 @@
 
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner\Handler;
 
-use Drupal\commerce_product\Entity\Product;
 use Drupal\pagedesigner\Entity\Element;
 use Drupal\views\Views;
 use Drupal\block\Entity\Block;
@@ -291,7 +290,7 @@ class AdaptableBlock implements HandlerPluginInterface {
   /**
    * {@inheritDoc}
    */
-  public function serialize(Element $entity, array &$result = []) {
+  public function serialize(Element $entity, &$result = []) {
     $fields = [];
     if ($entity->hasField('field_block_settings') && !$entity->field_block_settings->isEmpty()) {
       $settings = json_decode($entity->field_block_settings->value, TRUE);
