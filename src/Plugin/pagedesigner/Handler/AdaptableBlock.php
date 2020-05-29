@@ -81,179 +81,28 @@ class AdaptableBlock implements HandlerPluginInterface {
     // Expose the filters from the block so they can be
     // configurable in the pagedesigner for the editor.
     foreach ($filters as $key => $filter) {
+      $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
+      $filterPlugin = $filterManager->getInstance(['type' => $filter['plugin_id']])[0];
       if ($filter['plugin_id'] == 'bundle') {
         if ($filter['field'] === 'type') {
-          $bundleFilter = $filter;
+          $filter['bundle_filter'] = $filter;
         }
+      }
+      if ($filter['plugin_id'] == 'numeric') {
+        $filter['filters'] = $filters;
       }
       if (empty($filter['exposed'])) {
         continue;
       }
       // Create multiple choice for the bundle plugin type.
-      if ($filter['plugin_id'] == 'bundle') {
-        // Workaround for the content type, because there
-        // can not be a key named 'type' in the definition.
+      // Workaround for the content type, because there
+      // can not be a key named 'type' in the definition.
         if ($filter['field'] === 'type') {
-          $bundleFilter = $filter;
-          $options = [];
-          $values = [];
-          foreach ($filter['value'] as $key => $option) {
-            if (\Drupal::entityTypeManager()->getStorage('node_type')->load($option) != NULL) {
-              $options[$key] = \Drupal::entityTypeManager()->getStorage('node_type')->load($option)->label();
-              $values[$key] = TRUE;
-            }
-          }
-          $fields['content_type'] = [
-            'description' => 'Choose type',
-            'label' => 'Type',
-            'options' => $options,
-            'type' => 'multiplecheckbox',
-            'name' => 'content_type',
-            'value' => $values,
-          ];
+          $fields['content_type'] = $filterPlugin->build($filter);
         }
         else {
-          $values = [];
-          $fields[$filter['field']] = [
-            'description' => 'Choose options',
-            'label' => $filter['field'],
-            'options' => $filter['value'],
-            'type' => 'multiplecheckbox',
-            'name' => $filter['field'],
-            'value' => $values,
-          ];
+          $fields[$filter['field']] = $filterPlugin->build($filter);
         }
-      }
-      // Create select for the boolean plugin type.
-      if ($filter['plugin_id'] == 'boolean') {
-        $label = (string) \Drupal::service('entity.manager')->getFieldStorageDefinitions('node')[$filter['field']]->getLabel();
-        $fields[$filter['field']] = [
-          'description' => 'Select an option',
-          'label' => $label,
-          'options' => [
-            '1' => 'Yes',
-            '0' => 'No',
-          ],
-          'type' => 'select',
-        ];
-      }
-      // Create a text field for the string plugin type.
-      if ($filter['plugin_id'] == 'string') {
-        $label = (string) \Drupal::service('entity.manager')->getFieldStorageDefinitions('node')[$filter['field']]->getLabel();
-        $fields[$filter['field']] = [
-          'label' => $label,
-          'type' => 'text',
-        ];
-      }
-      if ($filter['plugin_id'] == 'taxonomy_index_tid') {
-        $label = \Drupal::service('entity_type.manager')->getStorage('taxonomy_vocabulary')->load($filter['vid'])->label();
-        $terms = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->loadTree($filter['vid']);
-        $options = [];
-        $values = [];
-        foreach ($terms as $option) {
-          $term = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->load($option->tid);
-          if ($term != NULL) {
-            $options[$option->tid] = $term->label();
-            $values[$option->tid] = TRUE;
-          }
-        }
-        $fields[$filter['field']] = [
-          'description' => 'Choose ' . $filter['vid'],
-          'label' => $label,
-          'options' => $options,
-          'type' => 'multiplecheckbox',
-          'name' => $filter['field'],
-          'value' => $values,
-        ];
-      }
-      if ($filter['plugin_id'] == 'numeric') {
-        if ($filter['field'] == 'nid') {
-          $nodes = [];
-          if ($bundleFilter) {
-            $bundles = [];
-            foreach ($bundleFilter['value'] as $key => $option) {
-              $bundles[] = $key;
-            }
-            $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
-              'type' => $bundles,
-            ]);
-          }
-          else {
-            $nids = \Drupal::entityQuery('node')->execute();
-            $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($nids);
-          }
-          $options = [];
-          $values = [];
-          foreach ($nodes as $node) {
-            if ($node != NULL) {
-              $options[$node->id()] = $node->label();
-              $values[] = $node->id();
-            }
-          }
-          $fields[$filter['field']] = [
-            'description' => 'Choose node',
-            'label' => $filter['expose']['label'],
-            'options' => $options,
-            'type' => 'select',
-            'name' => $filter['field'],
-            'value' => $values,
-          ];
-        }elseif ($filter['field'] == 'tid_raw') {
-          if( isset($filters['vid']) ){
-            $options = [];
-            $values = [];
-            foreach ( $filters['vid']['value'] as $vid => $vocabulary ) {
-              $terms = \Drupal::service('entity_type.manager')
-                ->getStorage('taxonomy_term')
-                ->loadTree($vid);
-
-              foreach ($terms as $term) {
-                if ($term != NULL) {
-                  $options[$term->tid] = $term->name;
-                }
-              }
-            }
-            $fields[$filter['field']] = [
-              'description' => 'Choose term',
-              'label' => $filter['expose']['label'],
-              'options' => $options,
-              'type' => 'select',
-              'name' => $filter['field'],
-              'value' => $values,
-            ];
-          }else{
-            $fields[$filter['field']] = [
-              'label' => $filter['field'],
-              'type' => 'text',
-            ];
-          }
-        } elseif (substr($filter['field'], -3) == '_id') {
-          $entity_type = $filter['entity_type'];
-          $label = substr($filter['field'],0,-3);
-          $items = \Drupal::entityTypeManager()->getStorage($entity_type)->loadMultiple();
-          $options = [];
-          $values = [];
-          foreach ($items as $item) {
-            if ($item != NULL) {
-              $options[$item->id()] = $item->label();
-            }
-          }
-          $fields[$filter['field']] = [
-            'description' => 'Choose ' . $label,
-            'label' => $filter['expose']['label'],
-            'options' => $options,
-            'type' => 'select',
-            'name' => $filter['field'],
-            'value' => $values,
-          ];
-        }
-        else {
-          $fields[$filter['field']] = [
-            'label' => $filter['field'],
-            'type' => 'text',
-          ];
-        }
-      }
     }
     $pager = $view->getDisplay()->getOption('pager');
     if ($pager['type'] != 'none') {
@@ -344,33 +193,11 @@ class AdaptableBlock implements HandlerPluginInterface {
       // Take the filter data and apply it to the field of the entity.
       $filters = $display->getOption('filters');
       foreach ($data['fields'] as $key => $value) {
+
         if (isset($filters[$key])) {
-          if ($filters[$key]['plugin_id'] === 'boolean' || $filters[$key]['plugin_id'] === 'string') {
-            $view_filters[$key]['value'] = $value;
-          }
-          elseif ($filters[$key]['plugin_id'] === 'numeric') {
-            $view_filters[$key]['value'] = $value;
-          }
-          elseif ($filters[$key]['plugin_id'] === 'bundle') {
-            foreach ($value as $filter_key => $item) {
-              if ($item) {
-                $view_filters[$key]['value'][$filter_key] = TRUE;
-              }
-              else {
-                $view_filters[$key]['value'][$filter_key] = FALSE;
-              }
-            }
-          }
-          elseif ($filters[$key]['plugin_id'] == 'taxonomy_index_tid') {
-            foreach ($value as $filter_key => $item) {
-              if ($item) {
-                $view_filters[$key]['value'][$filter_key] = TRUE;
-              }
-              else {
-                $view_filters[$key]['value'][$filter_key] = FALSE;
-              }
-            }
-          }
+          $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
+          $filter = $filterManager->getInstance(['type' => $filters[$key]]);
+          $view_filters[$key]['value'] = $filter->patch($value);
         }
         elseif ($key == 'content_type') {
           foreach ($value as $filter_key => $item) {
