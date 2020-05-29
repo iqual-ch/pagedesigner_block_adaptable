@@ -188,6 +188,7 @@ class AdaptableBlock implements HandlerPluginInterface {
           foreach ($nodes as $node) {
             if ($node != NULL) {
               $options[$node->id()] = $node->label();
+              $values[] = $node->id();
             }
           }
           $fields[$filter['field']] = [
@@ -296,7 +297,7 @@ class AdaptableBlock implements HandlerPluginInterface {
       $settings = json_decode($entity->field_block_settings->value, TRUE);
       if (!empty($settings['filters'])) {
         foreach ($settings['filters'] as $key => $item) {
-          $fields[$key] = $item['value'];
+          $fields[$key][] = $item['value'];
         }
       }
       if (!empty($settings['pager'])) {
