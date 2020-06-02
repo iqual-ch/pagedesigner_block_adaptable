@@ -17,7 +17,7 @@ use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
  *   },
  * )
  */
-class String extends FilterPluginBase {
+class PagedesignerFilterString extends FilterPluginBase {
 
   public function build(array $filter) {
     $label = (string) \Drupal::service('entity.manager')->getFieldStorageDefinitions('node')[$filter['field']]->getLabel();
