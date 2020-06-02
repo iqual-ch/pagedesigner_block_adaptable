@@ -192,12 +192,14 @@ class AdaptableBlock implements HandlerPluginInterface {
       }
       // Take the filter data and apply it to the field of the entity.
       $filters = $display->getOption('filters');
+      $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
+
       foreach ($data['fields'] as $key => $value) {
 
         if (isset($filters[$key])) {
-          $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
-          $filter = $filterManager->getInstance(['type' => $filters[$key]]);
+          $filter = $filterManager->getInstance(['type' => $filters[$key]])[0];
           $view_filters[$key]['value'] = $filter->patch($value);
+          \Drupal::logger('pagedesigner_block_adaptable')->notice(json_encode($view_filters[$key]['value']));
         }
         elseif ($key == 'content_type') {
           foreach ($value as $filter_key => $item) {
@@ -220,6 +222,7 @@ class AdaptableBlock implements HandlerPluginInterface {
       if (isset($data['fields']['pager_offset'])) {
         $pagerSettings['offset'] = $data['fields']['pager_offset'];
       }
+      $display->overrideOption('filters', $view_filters);
       $entity->field_block_settings->value = json_encode(['filters' => $view_filters, 'pager' => $pagerSettings]);
       $entity->save();
     }
