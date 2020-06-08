@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner\Handler;
+namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Handler;
 
 use Drupal\pagedesigner\Entity\Element;
 use Drupal\views\Views;
@@ -76,12 +76,12 @@ class AdaptableBlock implements HandlerPluginInterface {
     }
     $fields = $pattern->getFields();
     $filters = $view->getDisplay()->getOption('filters');
+    $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
 
     $bundleFilter = NULL;
     // Expose the filters from the block so they can be
     // configurable in the pagedesigner for the editor.
     foreach ($filters as $key => $filter) {
-      $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
       $filterPlugin = $filterManager->getInstance(['type' => $filter['plugin_id']])[0];
       if ($filter['plugin_id'] == 'bundle') {
         if ($filter['field'] === 'type') {
@@ -97,12 +97,12 @@ class AdaptableBlock implements HandlerPluginInterface {
       // Create multiple choice for the bundle plugin type.
       // Workaround for the content type, because there
       // can not be a key named 'type' in the definition.
-        if ($filter['field'] === 'type') {
-          $fields['content_type'] = $filterPlugin->build($filter);
-        }
-        else {
-          $fields[$filter['field']] = $filterPlugin->build($filter);
-        }
+      if ($filter['field'] === 'type') {
+        $fields['content_type'] = $filterPlugin->build($filter);
+      }
+      else {
+        $fields[$filter['field']] = $filterPlugin->build($filter);
+      }
     }
     $pager = $view->getDisplay()->getOption('pager');
     if ($pager['type'] != 'none') {
@@ -199,7 +199,6 @@ class AdaptableBlock implements HandlerPluginInterface {
         if (isset($filters[$key])) {
           $filter = $filterManager->getInstance(['type' => $filters[$key]])[0];
           $view_filters[$key]['value'] = $filter->patch($value);
-          \Drupal::logger('pagedesigner_block_adaptable')->notice(json_encode($view_filters[$key]['value']));
         }
         elseif ($key == 'content_type') {
           foreach ($value as $filter_key => $item) {
@@ -223,7 +222,7 @@ class AdaptableBlock implements HandlerPluginInterface {
         $pagerSettings['offset'] = $data['fields']['pager_offset'];
       }
       $display->overrideOption('filters', $view_filters);
-      $entity->field_block_settings->value = json_encode(['filters' => $view_filters, 'pager' => $pagerSettings]);
+      $entity->field_block_settings->value = json_encode(['pager' => $pagerSettings]);
       $entity->save();
     }
   }

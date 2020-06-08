@@ -1,43 +1,32 @@
 <?php
 
-namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner\Filter;
+namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
 use Drupal\pagedesigner\Entity\Element;
 use Drupal\pagedesigner\Plugin\FieldHandlerBase;
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
 
 /**
- * Process entities of type "boolean".
+ * Process entities of type "string".
  *
  * @PagedesignerFilter(
- *   id = "pagedesigner_filter_boolean",
- *   name = @Translation("Boolean filter"),
+ *   id = "pagedesigner_filter_string",
+ *   name = @Translation("String filter"),
  *   types = {
- *     "boolean",
+ *     "string",
  *   },
  * )
  */
-class Boolean extends FilterPluginBase {
+class String extends FilterPluginBase {
 
-  /**
-   * {@inheritDoc}
-   */
   public function build(array $filter) {
     $label = (string) \Drupal::service('entity.manager')->getFieldStorageDefinitions('node')[$filter['field']]->getLabel();
     return [
-      'description' => 'Select an option',
       'label' => $label,
-      'options' => [
-        '1' => 'Yes',
-        '0' => 'No',
-      ],
-      'type' => 'select',
+      'type' => 'text',
     ];
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public function patch($value) {
     return $value;
   }

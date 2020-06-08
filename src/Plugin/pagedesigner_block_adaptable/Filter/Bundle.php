@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner\Filter;
+namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
 use Drupal\pagedesigner\Entity\Element;
 use Drupal\pagedesigner\Plugin\FieldHandlerBase;

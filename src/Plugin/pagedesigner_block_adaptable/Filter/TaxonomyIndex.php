@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner\Filter;
+namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
 use Drupal\pagedesigner\Entity\Element;
 use Drupal\pagedesigner\Plugin\FieldHandlerBase;
@@ -44,11 +44,14 @@ class TaxonomyIndex extends FilterPluginBase {
   public function patch($value) {
     $result = [];
     foreach ($value as $filter_key => $item) {
-      if ($item) {
-        $result[$filter_key] = TRUE;
-      }
-      else {
-        $result[$filter_key] = FALSE;
+      $term = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->load($option->tid);
+      if ($term!= NULL) {
+        if ($item) {
+          $result[$filter_key] = TRUE;
+        }
+        else {
+          $result[$filter_key] = FALSE;
+        }
       }
     }
     return $result;

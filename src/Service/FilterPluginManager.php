@@ -29,10 +29,10 @@ class FilterPluginManager extends DefaultPluginManager implements FallbackPlugin
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     parent::__construct(
-      'Plugin/pagedesigner/Filter',
+      'Plugin/pagedesigner_block_adaptable/Filter',
       $namespaces,
       $module_handler,
-      'Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner\FilterPluginInterface',
+      'Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\FilterPluginInterface',
       'Drupal\pagedesigner_block_adaptable\Annotation\PagedesignerFilter'
     );
     $this->alterInfo('pagedesigner_filter_info');
