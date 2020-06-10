@@ -142,7 +142,7 @@ class AdaptableBlock implements HandlerPluginInterface {
   public function serialize(Element $entity, &$result = []) {
     $fields = [];
     if ($entity->hasField('field_block_settings') && !$entity->field_block_settings->isEmpty()) {
-      $settings = json_decode($entity->field_block_settings->value, TRUE);
+      $settings = json_decode($entity->field_block_settings->value);
       if (!empty($settings['filters'])) {
         foreach ($settings['filters'] as $key => $item) {
           $fields[$key][] = $item['value'];
