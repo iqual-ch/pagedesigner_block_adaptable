@@ -3,7 +3,7 @@
 namespace Drupal\pagedesigner_block_adaptable\Plugin;
 
 use Drupal\Component\Plugin\PluginBase;
-use Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner\FilterPluginInterface;
+use Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\FilterPluginInterface;
 
 /**
  * Base implementation for pagedesigner block filters.
