@@ -2,8 +2,6 @@
 
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
-use Drupal\pagedesigner\Entity\Element;
-use Drupal\pagedesigner\Plugin\FieldHandlerBase;
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
 
 /**
@@ -19,10 +17,14 @@ use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
  */
 class Numeric extends FilterPluginBase {
 
+  /**
+   *
+   */
   public function build(array $filter) {
     if (isset($filter['bundle_filter'])) {
       $bundleFilter = $filter['bundle_filter'];
-    }else {
+    }
+    else {
       $bundleFilter = NULL;
     }
     if (isset($filter['filters'])) {
@@ -62,11 +64,12 @@ class Numeric extends FilterPluginBase {
         'name' => $filter['field'],
         'value' => $values,
       ];
-    }elseif ($filter['field'] == 'tid_raw') {
-      if( isset($filters['vid']) ){
+    }
+    elseif ($filter['field'] == 'tid_raw') {
+      if (isset($filters['vid'])) {
         $options = [];
         $values = [];
-        foreach ( $filters['vid']['value'] as $vid => $vocabulary ) {
+        foreach ($filters['vid']['value'] as $vid => $vocabulary) {
           $terms = \Drupal::service('entity_type.manager')
             ->getStorage('taxonomy_term')
             ->loadTree($vid);
@@ -85,15 +88,17 @@ class Numeric extends FilterPluginBase {
           'name' => $filter['field'],
           'value' => $values,
         ];
-      }else{
+      }
+      else {
         return [
           'label' => $filter['field'],
           'type' => 'text',
         ];
       }
-    } elseif (substr($filter['field'], -3) == '_id') {
+    }
+    elseif (substr($filter['field'], -3) == '_id') {
       $entity_type = $filter['entity_type'];
-      $label = substr($filter['field'],0,-3);
+      $label = substr($filter['field'], 0, -3);
       $items = \Drupal::entityTypeManager()->getStorage($entity_type)->loadMultiple();
       $options = [];
       $values = [];
@@ -119,6 +124,9 @@ class Numeric extends FilterPluginBase {
     }
   }
 
+  /**
+   *
+   */
   public function patch($value) {
     return $value;
   }
