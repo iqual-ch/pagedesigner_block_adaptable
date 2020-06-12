@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Handler;
+namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner\Handler;
 
 use Drupal\pagedesigner\Entity\Element;
 use Drupal\views\Views;
@@ -9,6 +9,7 @@ use Drupal\pagedesigner_block_adaptable\AdaptableBlockViewBuilder;
 use Drupal\ui_patterns\Definition\PatternDefinitionField;
 use Drupal\ui_patterns\Definition\PatternDefinition;
 use Drupal\pagedesigner\Plugin\pagedesigner\HandlerPluginInterface;
+use Drupal\Component\Plugin\PluginBase;
 
 /**
  * Process entities of type "block".
@@ -24,7 +25,7 @@ use Drupal\pagedesigner\Plugin\pagedesigner\HandlerPluginInterface;
  *   weight = 1000,
  * )
  */
-class AdaptableBlock implements HandlerPluginInterface {
+class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
 
   /**
    * {@inheritdoc}
@@ -142,7 +143,7 @@ class AdaptableBlock implements HandlerPluginInterface {
   public function serialize(Element $entity, &$result = []) {
     $fields = [];
     if ($entity->hasField('field_block_settings') && !$entity->field_block_settings->isEmpty()) {
-      $settings = json_decode($entity->field_block_settings->value);
+      $settings = json_decode($entity->field_block_settings->value, TRUE);
       if (!empty($settings['filters'])) {
         foreach ($settings['filters'] as $key => $item) {
           $fields[$key][] = $item['value'];
@@ -195,9 +196,8 @@ class AdaptableBlock implements HandlerPluginInterface {
       $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
 
       foreach ($data['fields'] as $key => $value) {
-
         if (isset($filters[$key])) {
-          $filter = $filterManager->getInstance(['type' => $filters[$key]])[0];
+          $filter = $filterManager->getInstance(['type' => $filters[$key]['plugin_id']])[0];
           $view_filters[$key]['value'] = $filter->patch($value);
         }
         elseif ($key == 'content_type') {
@@ -221,8 +221,7 @@ class AdaptableBlock implements HandlerPluginInterface {
       if (isset($data['fields']['pager_offset'])) {
         $pagerSettings['offset'] = $data['fields']['pager_offset'];
       }
-      $display->overrideOption('filters', $view_filters);
-      $entity->field_block_settings->value = json_encode(['pager' => $pagerSettings]);
+      $entity->field_block_settings->value = json_encode(['filters' => $view_filters, 'pager' => $pagerSettings]);
       $entity->save();
     }
   }
