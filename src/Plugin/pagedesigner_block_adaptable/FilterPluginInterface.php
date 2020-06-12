@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner;
+namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable;
 
 use Drupal\pagedesigner\Entity\Element;
 use Drupal\ui_patterns\Definition\PatternDefinitionField;
