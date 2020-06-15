@@ -39,6 +39,9 @@ class Boolean extends FilterPluginBase {
    * {@inheritDoc}
    */
   public function patch($value) {
+    if (is_array($value)) {
+      $value = reset($value);
+    }
     return $value;
   }
 

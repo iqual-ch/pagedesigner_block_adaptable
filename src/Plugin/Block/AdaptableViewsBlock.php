@@ -74,24 +74,28 @@ class AdaptableViewsBlock extends ViewsBlock {
    */
   protected function alterFilters($customFilters) {
     $filters = $this->view->getDisplay()->getOption('filters');
+    $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
+
     foreach ($customFilters as $key => $filter) {
       if ($key == 'content_type') {
         $key = 'type';
       }
-      if ($filters[$key]['plugin_id'] == 'numeric') {
-        $filters[$key]['value']['value'] = $filter['value'];
+      if (isset($filters[$key])) {
+        $filterPlugin = $filterManager->getInstance(['type' => $filters[$key]['plugin_id']])[0];
+        if ($filters[$key]['plugin_id'] == 'numeric') {
+          $filters[$key]['value']['value'] = $filterPlugin->patch($filter['value']);
+        } else {
+          $filters[$key]['value'] = $filterPlugin->patch($filter['value']);
+        }
       }
-      elseif (\is_string($filter['value'])) {
-        $filters[$key]['value'] = $filter['value'];
-      }
-      else {
-        foreach ($filter['value'] as $item => $enabled) {
-          if ($enabled) {
-            $filters[$key]['value'][$item] = $item;
+      elseif ($key == 'content_type') {
+        foreach ($filter['value'] as $filter_key => $item) {
+          if ($item) {
+            $filters[$key]['value'][$filter_key] = TRUE;
           }
           else {
-            unset($filters[$key]['value'][$item]);
-            unset($filters[$key]['value']['all']);
+            $filters[$key]['value'][$filter_key] = FALSE;
+            $filters[$key]['value']['all'] = FALSE;
           }
         }
       }

@@ -44,10 +44,10 @@ class TaxonomyIndex extends FilterPluginBase {
   public function patch($value) {
     $result = [];
     foreach ($value as $filter_key => $item) {
-      $term = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->load($option->tid);
+      $term = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->load($filter_key);
       if ($term!= NULL) {
         if ($item) {
-          $result[$filter_key] = TRUE;
+          $result[$filter_key] = $filter_key;
         }
         else {
           $result[$filter_key] = FALSE;
