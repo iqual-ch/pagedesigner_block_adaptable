@@ -223,6 +223,7 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
       }
       $entity->field_block_settings->value = json_encode(['filters' => $view_filters, 'pager' => $pagerSettings]);
       $entity->save();
+      \Drupal::service('cache_tags.invalidator')->invalidateTags($view->storage->getCacheTagsToInvalidate());
     }
   }
 
