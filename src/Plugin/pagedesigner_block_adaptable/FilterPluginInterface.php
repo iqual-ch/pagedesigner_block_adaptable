@@ -6,7 +6,7 @@ use Drupal\pagedesigner\Entity\Element;
 use Drupal\ui_patterns\Definition\PatternDefinitionField;
 
 /**
- * Povides the interface for defining pagedesigner block filters.
+ * Provides the interface for defining pagedesigner block filters.
  */
 interface FilterPluginInterface {
 
