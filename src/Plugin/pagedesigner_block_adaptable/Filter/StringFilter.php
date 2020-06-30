@@ -2,8 +2,6 @@
 
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
-use Drupal\pagedesigner\Entity\Element;
-use Drupal\pagedesigner\Plugin\FieldHandlerBase;
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
 
 /**
@@ -19,6 +17,9 @@ use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
  */
 class StringFilter extends FilterPluginBase {
 
+  /**
+   * {@inheritDoc}
+   */
   public function build(array $filter) {
     $label = (string) \Drupal::service('entity.manager')->getFieldStorageDefinitions('node')[$filter['field']]->getLabel();
     return [
@@ -27,7 +28,17 @@ class StringFilter extends FilterPluginBase {
     ];
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public function patch($value) {
+    return $value;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function serialize($value) {
     return $value;
   }
 

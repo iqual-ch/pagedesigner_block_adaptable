@@ -10,4 +10,10 @@ use Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filt
  */
 abstract class FilterPluginBase extends PluginBase implements FilterPluginInterface {
 
+  /**
+   * {@inheritDoc}
+   */
+  public function serialize($value) {
+    return $value;
+  }
 }

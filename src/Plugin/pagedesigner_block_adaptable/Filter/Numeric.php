@@ -18,7 +18,7 @@ use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
 class Numeric extends FilterPluginBase {
 
   /**
-   *
+   * {@inheritDoc}
    */
   public function build(array $filter) {
     if (isset($filter['bundle_filter'])) {
@@ -125,10 +125,16 @@ class Numeric extends FilterPluginBase {
   }
 
   /**
-   *
+   * {@inheritDoc}
    */
   public function patch($value) {
     return $value;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  public function serialize($value) {
+    return ['value' => $value];
+  }
 }

@@ -29,4 +29,9 @@ interface FilterPluginInterface {
    */
   public function patch($value);
 
+  /**
+   * Serializes the filter value.
+   */
+  public function serialize($value);
+
 }

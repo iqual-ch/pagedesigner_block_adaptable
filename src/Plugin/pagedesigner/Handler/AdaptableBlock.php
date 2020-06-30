@@ -143,10 +143,13 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
   public function serialize(Element $entity, &$result = []) {
     $fields = [];
     if ($entity->hasField('field_block_settings') && !$entity->field_block_settings->isEmpty()) {
-      $settings = json_decode($entity->field_block_settings->value);
+      $settings = json_decode($entity->field_block_settings->value, true);
+      $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
       if (!empty($settings['filters'])) {
         foreach ($settings['filters'] as $key => $item) {
-          $fields[$key][] = $item['value'];
+
+          $filter = $filterManager->getInstance(['type' => $item['type']])[0];
+          $fields[$key] = $filter->serialize($item['value']);
         }
       }
       if (!empty($settings['pager'])) {
@@ -199,6 +202,7 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
         if (isset($filters[$key])) {
           $filter = $filterManager->getInstance(['type' => $filters[$key]['plugin_id']])[0];
           $view_filters[$key]['value'] = $filter->patch($value);
+          $view_filters[$key]['type'] = $filters[$key]['plugin_id'];
         }
         elseif ($key == 'content_type') {
           foreach ($value as $filter_key => $item) {
@@ -221,6 +225,7 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
       if (isset($data['fields']['pager_offset'])) {
         $pagerSettings['offset'] = $data['fields']['pager_offset'];
       }
+
       $entity->field_block_settings->value = json_encode(['filters' => $view_filters, 'pager' => $pagerSettings]);
       $entity->save();
       \Drupal::service('cache_tags.invalidator')->invalidateTags($view->storage->getCacheTagsToInvalidate());

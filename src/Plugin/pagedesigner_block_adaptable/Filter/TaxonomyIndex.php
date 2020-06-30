@@ -19,6 +19,9 @@ use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
  */
 class TaxonomyIndex extends FilterPluginBase {
 
+  /**
+   * {@inheritDoc}
+   */
   public function build(array $filter) {
     $label = \Drupal::service('entity_type.manager')->getStorage('taxonomy_vocabulary')->load($filter['vid'])->label();
     $terms = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->loadTree($filter['vid']);
@@ -41,6 +44,9 @@ class TaxonomyIndex extends FilterPluginBase {
     ];
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public function patch($value) {
     $result = [];
     foreach ($value as $filter_key => $item) {
@@ -55,6 +61,22 @@ class TaxonomyIndex extends FilterPluginBase {
       }
     }
     return $result;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function serialize($value) {
+    $values = [];
+    foreach ($value as $key => $item) {
+      if ($item != FALSE) {
+        $values[$key] = TRUE;
+      }
+      else {
+        $values[$key] = FALSE;
+      }
+    }
+    return $values;
   }
 
 }
