@@ -48,8 +48,13 @@ class Numeric extends FilterPluginBase {
       }
       $options = [];
       $values = [];
+      $i = 0;
 
       foreach ($nids as $nid) {
+        // Limit to 1000 records.
+        if ($i > 1000) {
+          break;
+        }
         $result = \Drupal::database()->query("SELECT n.title FROM {node_field_data} n WHERE n.nid = :nid", [
           'nid' => $nid,
         ]);
@@ -58,6 +63,7 @@ class Numeric extends FilterPluginBase {
           $options[$nid] = $label->title;
           $values[] = $nid;
         }
+        $i++;
       }
       return [
         'description' => 'Choose node',
