@@ -40,20 +40,23 @@ class Numeric extends FilterPluginBase {
         foreach ($bundleFilter['value'] as $key => $option) {
           $bundles[] = $key;
         }
-        $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
-          'type' => $bundles,
-        ]);
+        $nids = \Drupal::entityQuery('node')
+          ->condition('type', $bundles)->execute();
       }
       else {
         $nids = \Drupal::entityQuery('node')->execute();
-        $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($nids);
       }
       $options = [];
       $values = [];
-      foreach ($nodes as $node) {
-        if ($node != NULL) {
-          $options[$node->id()] = $node->label();
-          $values[] = $node->id();
+
+      foreach ($nids as $nid) {
+        $result = \Drupal::database()->query("SELECT n.title FROM {node_field_data} n WHERE n.nid = :nid", [
+          'nid' => $nid,
+        ]);
+        $label = $result->fetch();
+        if ($label) {
+          $options[$nid] = $label->title;
+          $values[] = $nid;
         }
       }
       return [

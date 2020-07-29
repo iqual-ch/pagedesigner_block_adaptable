@@ -24,14 +24,17 @@ class TaxonomyIndex extends FilterPluginBase {
    */
   public function build(array $filter) {
     $label = \Drupal::service('entity_type.manager')->getStorage('taxonomy_vocabulary')->load($filter['vid'])->label();
-    $terms = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->loadTree($filter['vid']);
+    $terms =  $query = \Drupal::entityQuery('taxonomy_term')->condition('vid', $filter['vid'])->execute();
     $options = [];
     $values = [];
     foreach ($terms as $option) {
-      $term = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->load($option->tid);
-      if ($term != NULL) {
-        $options[$option->tid] = $term->label();
-        $values[$option->tid] = TRUE;
+      $result = \Drupal::database()->query("SELECT t.name FROM {taxonomy_term_field_data} t WHERE t.tid = :tid", [
+        'tid' => $option,
+      ]);
+      $term = $result->fetch();
+      if ($term) {
+        $options[$option] = $term->name;
+        $values[$option] = TRUE;
       }
     }
     return [
