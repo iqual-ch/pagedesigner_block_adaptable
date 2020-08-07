@@ -2,8 +2,6 @@
 
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
-use Drupal\pagedesigner\Entity\Element;
-use Drupal\pagedesigner\Plugin\FieldHandlerBase;
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
 
 /**
@@ -24,19 +22,7 @@ class TaxonomyIndex extends FilterPluginBase {
    */
   public function build(array $filter) {
     $label = \Drupal::service('entity_type.manager')->getStorage('taxonomy_vocabulary')->load($filter['vid'])->label();
-    $terms =  $query = \Drupal::entityQuery('taxonomy_term')->condition('vid', $filter['vid'])->execute();
-    $options = [];
-    $values = [];
-    foreach ($terms as $option) {
-      $result = \Drupal::database()->query("SELECT t.name FROM {taxonomy_term_field_data} t WHERE t.tid = :tid", [
-        'tid' => $option,
-      ]);
-      $term = $result->fetch();
-      if ($term) {
-        $options[$option] = $term->name;
-        $values[$option] = TRUE;
-      }
-    }
+    $options = $this->loadOptionsAsTree($filter['vid']);
     return [
       'description' => 'Choose ' . $filter['vid'],
       'label' => $label,
@@ -48,13 +34,73 @@ class TaxonomyIndex extends FilterPluginBase {
   }
 
   /**
+   * Loads the tree of a vocabulary.
+   *
+   * @param string $vocabulary
+   *   Machine name.
+   *
+   * @return array
+   *   Vocabulary as tree.
+   */
+  private function loadOptionsAsTree(string $vocabulary) {
+    $terms = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->loadTree($vocabulary);
+    $tree = [];
+    $weight = 0;
+    foreach ($terms as $treeObject) {
+      $this->addOptionToTree($tree, $treeObject, $vocabulary, $weight);
+    }
+
+    return $tree;
+  }
+
+  /**
+   * Recursively appends a new option to the option tree.
+   *
+   * @param array $tree
+   *   Reference to tree.
+   * @param object $option
+   *   Option as object.
+   * @param string $vocabulary
+   *   Vocabulary machine name.
+   * @param int $weight
+   *   Sorting options.
+   */
+  protected function addOptionToTree(array &$tree, $option, string $vocabulary, int &$weight) {
+
+    if ($option->depth != 0) {
+      return;
+    }
+
+    $tree[$option->tid] = [
+      'label' => $option->name,
+      'weight' => $weight++,
+      'children' => [],
+    ];
+
+    $children = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->loadChildren($option->tid);
+    if (!$children) {
+      return;
+    }
+
+    $childTreeObjects = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->loadTree($vocabulary, $option->tid);
+
+    foreach ($children as $child) {
+      foreach ($childTreeObjects as $childTreeObject) {
+        if ($childTreeObject->tid == $child->id()) {
+          $this->addOptionToTree($tree[$option->tid]['children'], $childTreeObject, $vocabulary, $weight);
+        }
+      }
+    }
+  }
+
+  /**
    * {@inheritDoc}
    */
   public function patch($value) {
     $result = [];
     foreach ($value as $filter_key => $item) {
       $term = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->load($filter_key);
-      if ($term!= NULL) {
+      if ($term != NULL) {
         if ($item) {
           $result[$filter_key] = $filter_key;
         }
