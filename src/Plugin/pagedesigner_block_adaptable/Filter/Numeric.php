@@ -48,22 +48,17 @@ class Numeric extends FilterPluginBase {
       }
       $options = [];
       $values = [];
-      $i = 0;
-
-      foreach ($nids as $nid) {
-        // Limit to 1000 records.
-        if ($i > 1000) {
-          break;
+      $result = \Drupal::database()->query("SELECT title, nid FROM node_field_data WHERE nid in (:nids[])", [
+        ':nids[]' => $nids,
+      ]);
+      if ($result) {
+        // while($row = $result->fetchObj()) {
+        foreach ($result as $row) {
+          if (!empty($row->label)) {
+            $options[$row->nid] = $row->title;
+            $values[] = $row->nid;
+          }
         }
-        $result = \Drupal::database()->query("SELECT n.title FROM {node_field_data} n WHERE n.nid = :nid", [
-          'nid' => $nid,
-        ]);
-        $label = $result->fetch();
-        if ($label) {
-          $options[$nid] = $label->title;
-          $values[] = $nid;
-        }
-        $i++;
       }
       return [
         'description' => 'Choose node',
@@ -146,4 +141,5 @@ class Numeric extends FilterPluginBase {
   public function serialize($value) {
     return ['value' => $value];
   }
+
 }
