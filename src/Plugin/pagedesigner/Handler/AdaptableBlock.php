@@ -2,6 +2,7 @@
 
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner\Handler;
 
+use Drupal\Core\Render\RenderContext;
 use Drupal\pagedesigner\Entity\Element;
 use Drupal\views\Views;
 use Drupal\block\Entity\Block;
@@ -40,7 +41,9 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
     foreach ($patterns as $pattern) {
       if (isset($pattern->getAdditional()['block'])) {
         $block = Block::load($pattern->getAdditional()['block']);
-        $this->augmentDefinition($pattern, $block);
+        \Drupal::service('renderer')->executeInRenderContext(new RenderContext(), function () use ($pattern, $block) {
+          $this->augmentDefinition($pattern, $block);
+        });
       }
     }
   }
@@ -79,7 +82,6 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
     $filters = $view->getDisplay()->getOption('filters');
     $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
 
-    $bundleFilter = NULL;
     // Expose the filters from the block so they can be
     // configurable in the pagedesigner for the editor.
     foreach ($filters as $key => $filter) {
@@ -143,7 +145,7 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
   public function serialize(Element $entity, &$result = []) {
     $fields = [];
     if ($entity->hasField('field_block_settings') && !$entity->field_block_settings->isEmpty()) {
-      $settings = json_decode($entity->field_block_settings->value, true);
+      $settings = json_decode($entity->field_block_settings->value, TRUE);
       $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
       if (!empty($settings['filters'])) {
         foreach ($settings['filters'] as $key => $item) {
