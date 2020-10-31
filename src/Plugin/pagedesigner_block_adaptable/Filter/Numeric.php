@@ -40,19 +40,17 @@ class Numeric extends FilterPluginBase {
         foreach ($bundleFilter['value'] as $key => $option) {
           $bundles[] = $key;
         }
-        $nids = \Drupal::entityQuery('node')
-          ->condition('type', $bundles)->execute();
+        $result = \Drupal::database()->query("SELECT title, nid FROM node_field_data WHERE type in (:types[])", [
+          ':types[]' => $bundles,
+        ]);
       }
       else {
-        $nids = \Drupal::entityQuery('node')->execute();
+        $result = \Drupal::database()->query("SELECT title, nid FROM node_field_data");
       }
       $options = [];
       $values = [];
-      $result = \Drupal::database()->query("SELECT title, nid FROM node_field_data WHERE nid in (:nids[])", [
-        ':nids[]' => $nids,
-      ]);
       if ($result) {
-        // while($row = $result->fetchObj()) {
+        // while($row = $result->fetchObj()) {.
         foreach ($result as $row) {
           if (!empty($row->label)) {
             $options[$row->nid] = $row->title;
