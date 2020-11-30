@@ -2,6 +2,7 @@
 
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
+use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
 
 /**
@@ -107,6 +108,15 @@ class Numeric extends FilterPluginBase {
       foreach ($items as $item) {
         if ($item != NULL) {
           $options[$item->id()] = $item->label();
+          // Support for the commerce variation entity type.
+          if ($entity_type == 'commerce_product_variation') {
+            /** @var ProductVariation $variation */
+            $variation = ProductVariation::load($item->id());
+            // If it is a variation, get the label and SKU from the variation
+            // instead of only the product label, since it will be the same for
+            // each variation.
+            $options[$item->id()] = $variation->label() . ' - ' . $variation->getSku();
+          }
         }
       }
       return [
