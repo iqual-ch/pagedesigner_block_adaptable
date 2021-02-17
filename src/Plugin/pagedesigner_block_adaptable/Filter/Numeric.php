@@ -68,6 +68,28 @@ class Numeric extends FilterPluginBase {
         'value' => $values,
       ];
     }
+    elseif (substr($filter['field'], -10) == '_target_id' && substr($filter['field'], 0, 6) == 'field_') {
+      $bundle = substr($filter['field'], 6, -10);
+      $label = $filter['expose']['label'];
+      $items = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+        'type' => $bundle
+      ]);
+      $options = [];
+      $values = [];
+      foreach ($items as $item) {
+        if ($item != NULL) {
+          $options[$item->id()] = $item->label();
+        }
+      }
+      return [
+        'description' => 'Choose ' . $label,
+        'label' => $filter['expose']['label'],
+        'options' => $options,
+        'type' => 'select',
+        'name' => $filter['field'],
+        'value' => $values,
+      ];
+    }
     elseif ($filter['field'] == 'tid_raw') {
       if (isset($filters['vid'])) {
         $options = [];

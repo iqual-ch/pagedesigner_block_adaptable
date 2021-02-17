@@ -59,6 +59,8 @@ class AdaptableViewsBlock extends ViewsBlock {
       // Reset the options for the next build.
       $this->view->getDisplay()->overrideOption('filters', $filters);
       $this->view->getDisplay()->overrideOption('pager', $pager);
+      // Hide the exposed filters, since there are not any in the pagedesigner adaptable block.
+      $this->view->exposed_widgets = NULL;
     }
     else {
       $build = parent::build();
