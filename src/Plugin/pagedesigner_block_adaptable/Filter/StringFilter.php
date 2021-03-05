@@ -21,7 +21,13 @@ class StringFilter extends FilterPluginBase {
    * {@inheritDoc}
    */
   public function build(array $filter) {
-    $label = (string) \Drupal::service('entity.manager')->getFieldStorageDefinitions('node')[$filter['field']]->getLabel();
+    if (!empty(\Drupal::service('entity.manager')->getFieldStorageDefinitions('node')[$filter['field']])) {
+      $label = (string) \Drupal::service('entity.manager')->getFieldStorageDefinitions('node')[$filter['field']]->getLabel();
+    }
+    else {
+      $label = NULL;
+    }
+
     return [
       'label' => $label,
       'type' => 'text',
