@@ -2,8 +2,6 @@
 
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
-use Drupal\pagedesigner\Entity\Element;
-use Drupal\pagedesigner\Plugin\FieldHandlerBase;
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
 
 /**
@@ -34,7 +32,7 @@ class TaxonomyIndex extends FilterPluginBase {
       $term = $result->fetch();
       if ($term) {
         $options[$option] = $term->name;
-        $values[$option] = TRUE;
+        $values[$option] = FALSE;
       }
     }
     return [
