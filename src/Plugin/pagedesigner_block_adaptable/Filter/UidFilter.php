@@ -7,57 +7,36 @@ use Drupal\pagedesigner\Plugin\FieldHandlerBase;
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
 
 /**
- * Process entities of type "NID Filter".
+ * Process entities of type "UID Filter".
  *
  * @PagedesignerFilter(
- *   id = "pagedesigner_filter_nid",
- *   name = @Translation("NID filter"),
+ *   id = "pagedesigner_filter_uid",
+ *   name = @Translation("UID filter"),
  *   types = {
- *     "nid_views_filter",
+ *     "user_name"
  *   }
  * )
  */
-class NidFilter extends FilterPluginBase {
+class UidFilter extends FilterPluginBase {
 
   /**
    * {@inheritDoc}
    */
   public function build(array $filter) {
-    if (isset($filter['bundle_filter'])) {
-      $bundleFilter = $filter['bundle_filter'];
-    }
-    else {
-      if (!empty($filter['filters']['type'])) {
-        $bundleFilter = $filter['filters']['type'];
-      }
-      else {
-        $bundleFilter = NULL;
-      }
-    }
-    if ($bundleFilter) {
-      $bundles = [];
-      foreach ($bundleFilter['value'] as $key => $option) {
-        $bundles[] = $key;
-      }
-      $result = \Drupal::database()->query("SELECT title, nid FROM node_field_data WHERE type in (:types[])", [
-        ':types[]' => $bundles,
-      ]);
-    }
-    else {
-      $result = \Drupal::database()->query("SELECT title, nid FROM node_field_data");
-    }
+    $result = \Drupal::database()->query("SELECT name, uid FROM users_field_data");
+
     $options = [];
     $values = [];
     if ($result) {
       foreach ($result as $row) {
-        if (!empty($row->title)) {
-          $options[$row->nid] = $row->title;
-          $values[$row->nid] = FALSE;
+        if (!empty($row->name)) {
+          $options[$row->uid] = $row->name;
+          $values[$row->uid] = FALSE;
         }
       }
     }
     return [
-      'description' => 'Choose node',
+      'description' => 'Choose user',
       'label' => $filter['expose']['label'],
       'options' => $options,
       'type' => 'multiplecheckbox',
@@ -72,8 +51,8 @@ class NidFilter extends FilterPluginBase {
   public function patch($value) {
     $result = [];
     foreach ($value as $filter_key => $item) {
-      $node = \Drupal::service('entity_type.manager')->getStorage('user')->load($filter_key);
-      if ($node!= NULL) {
+      $node = \Drupal::service('entity_type.manager')->getStorage('node')->load($filter_key);
+      if ($node != NULL) {
         if ($item) {
           $result[$filter_key] = $filter_key;
         }
