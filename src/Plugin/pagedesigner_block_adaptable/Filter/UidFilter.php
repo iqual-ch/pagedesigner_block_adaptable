@@ -51,8 +51,8 @@ class UidFilter extends FilterPluginBase {
   public function patch($value) {
     $result = [];
     foreach ($value as $filter_key => $item) {
-      $node = \Drupal::service('entity_type.manager')->getStorage('node')->load($filter_key);
-      if ($node != NULL) {
+      $user = \Drupal::service('entity_type.manager')->getStorage('user')->load($filter_key);
+      if ($user != NULL) {
         if ($item) {
           $result[$filter_key] = $filter_key;
         }
