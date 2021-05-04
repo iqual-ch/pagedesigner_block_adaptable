@@ -2,42 +2,42 @@
 
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
+use Drupal\pagedesigner\Entity\Element;
+use Drupal\pagedesigner\Plugin\FieldHandlerBase;
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
 
 /**
- * Process entities of type "taxonomyIndex".
+ * Process entities of type "UID Filter".
  *
  * @PagedesignerFilter(
- *   id = "pagedesigner_filter_taxonomy_index",
- *   name = @Translation("TaxonomyIndex filter"),
+ *   id = "pagedesigner_filter_uid",
+ *   name = @Translation("UID filter"),
  *   types = {
- *     "taxonomy_index_tid",
- *   },
+ *     "user_name"
+ *   }
  * )
  */
-class TaxonomyIndex extends FilterPluginBase {
+class UidFilter extends FilterPluginBase {
 
   /**
    * {@inheritDoc}
    */
   public function build(array $filter) {
-    $label = \Drupal::service('entity_type.manager')->getStorage('taxonomy_vocabulary')->load($filter['vid'])->label();
-    $terms =  $query = \Drupal::entityQuery('taxonomy_term')->condition('vid', $filter['vid'])->execute();
+    $result = \Drupal::database()->query("SELECT name, uid FROM users_field_data");
+
     $options = [];
     $values = [];
-    foreach ($terms as $option) {
-      $result = \Drupal::database()->query("SELECT t.name FROM {taxonomy_term_field_data} t WHERE t.tid = :tid", [
-        'tid' => $option,
-      ]);
-      $term = $result->fetch();
-      if ($term) {
-        $options[$option] = $term->name;
-        $values[$option] = FALSE;
+    if ($result) {
+      foreach ($result as $row) {
+        if (!empty($row->name)) {
+          $options[$row->uid] = $row->name;
+          $values[$row->uid] = FALSE;
+        }
       }
     }
     return [
-      'description' => 'Choose ' . $filter['vid'],
-      'label' => $label,
+      'description' => 'Choose user',
+      'label' => $filter['expose']['label'],
       'options' => $options,
       'type' => 'multiplecheckbox',
       'name' => $filter['field'],
@@ -51,8 +51,8 @@ class TaxonomyIndex extends FilterPluginBase {
   public function patch($value) {
     $result = [];
     foreach ($value as $filter_key => $item) {
-      $term = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->load($filter_key);
-      if ($term!= NULL) {
+      $user = \Drupal::service('entity_type.manager')->getStorage('user')->load($filter_key);
+      if ($user != NULL) {
         if ($item) {
           $result[$filter_key] = $filter_key;
         }

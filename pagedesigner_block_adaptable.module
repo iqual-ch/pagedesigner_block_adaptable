@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function pagedesigner_block_adaptable_views_data_alter(array &$data) {
+  $data['node']['nid'] = [
+    'title' => t('NID filter'),
+    'filter' => [
+      'title' => t('NID filter'),
+      'help' => t('Provides a custom filter for project nodes by their nid.'),
+      'field' => 'nid',
+      'id' => 'nid_views_filter',
+    ],
+  ];
+}

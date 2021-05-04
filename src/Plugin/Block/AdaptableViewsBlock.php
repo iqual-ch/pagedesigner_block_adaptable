@@ -78,6 +78,7 @@ class AdaptableViewsBlock extends ViewsBlock {
     $filters = $this->view->getDisplay()->getOption('filters');
     $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
 
+    $filterPlugin = $filterManager->getInstance(['type' => 'nid_views_filter'])[0];
     foreach ($customFilters as $key => $filter) {
       if ($key == 'content_type') {
         $key = 'type';

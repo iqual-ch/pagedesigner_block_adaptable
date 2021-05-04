@@ -26,7 +26,12 @@ class Numeric extends FilterPluginBase {
       $bundleFilter = $filter['bundle_filter'];
     }
     else {
-      $bundleFilter = NULL;
+      if (!empty($filter['filters']['type'])) {
+        $bundleFilter = $filter['filters']['type'];
+      }
+      else {
+        $bundleFilter = NULL;
+      }
     }
     if (isset($filter['filters'])) {
       $filters = $filter['filters'];
@@ -53,7 +58,7 @@ class Numeric extends FilterPluginBase {
       if ($result) {
         // while($row = $result->fetchObj()) {.
         foreach ($result as $row) {
-          if (!empty($row->label)) {
+          if (!empty($row->title)) {
             $options[$row->nid] = $row->title;
             $values[] = $row->nid;
           }

@@ -91,7 +91,7 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
           $filter['bundle_filter'] = $filter;
         }
       }
-      if ($filter['plugin_id'] == 'numeric') {
+      if ($filter['plugin_id'] == 'numeric' || $filter['plugin_id'] == 'nid_views_filter') {
         $filter['filters'] = $filters;
       }
       if (empty($filter['exposed'])) {
