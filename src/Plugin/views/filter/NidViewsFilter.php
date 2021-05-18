@@ -49,7 +49,7 @@ class NidViewsFilter extends InOperator {
         }
       }
     }
-    if ($bundleFilter) {
+    if (isset($bundleFilter)) {
       $bundles = [];
       foreach ($bundleFilter['value'] as $key => $option) {
         $bundles[] = $key;
