@@ -1,0 +1,3 @@
+views.display.adaptable_block:
+  type: views.display.block
+  label: 'Adaptable block display options'
