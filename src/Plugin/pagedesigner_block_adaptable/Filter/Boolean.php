@@ -23,7 +23,23 @@ class Boolean extends FilterPluginBase {
    * {@inheritDoc}
    */
   public function build(array $filter) {
-    $label = (string) \Drupal::service('entity.manager')->getFieldStorageDefinitions('node')[$filter['field']]->getLabel();
+    $storage_definitions = \Drupal::service('entity.manager')->getFieldStorageDefinitions('node');
+
+    if (!empty($storage_definitions[$filter['field']])) {
+      $label = (string) $storage_definitions[$filter['field']]->getLabel();
+    }
+    else {
+      if (substr($filter['field'], -6, 6) == '_value') {
+        $field_name = substr($filter['field'], 0, strlen($filter['field']) - 6);
+      }
+      if (!empty($field_name)) {
+        $label = (string) $storage_definitions[$field_name]->getLabel();
+      }
+      else {
+        $label = $filter['field'];
+      }
+
+    }
     return [
       'description' => 'Select an option',
       'label' => $label,
