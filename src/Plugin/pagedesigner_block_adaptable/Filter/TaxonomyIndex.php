@@ -57,7 +57,7 @@ class TaxonomyIndex extends FilterPluginBase {
           $result[$filter_key] = $filter_key;
         }
         else {
-          $result[$filter_key] = FALSE;
+          unset($result[$filter_key]);
         }
       }
     }
@@ -74,7 +74,7 @@ class TaxonomyIndex extends FilterPluginBase {
         $values[$key] = TRUE;
       }
       else {
-        $values[$key] = FALSE;
+        unset($values[$key]);
       }
     }
     return $values;
