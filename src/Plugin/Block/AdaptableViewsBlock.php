@@ -53,12 +53,14 @@ class AdaptableViewsBlock extends ViewsBlock {
         $this->alterPager($settings['pager']);
       }
 
-      // Hide the exposed filters and submit button.
-      $this->view->exposed_widgets = array_diff_key($this->view->exposed_widgets, $filters);
-      unset($this->view->exposed_widgets['actions']);
-
       // Build the view.
       $build = parent::build();
+
+      // Hide the exposed filters and submit button.
+      if (is_array($this->view->exposed_widgets)) {
+        $this->view->exposed_widgets = array_diff_key($this->view->exposed_widgets, $filters);
+        unset($this->view->exposed_widgets['actions']);
+      }
 
       // Reset the options for the next build.
       $this->view->getDisplay()->overrideOption('filters', $filters);
