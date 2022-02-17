@@ -59,7 +59,8 @@ class AdaptableViewsBlock extends ViewsBlock {
       // Hide the exposed filters and submit button.
       if (is_array($this->view->exposed_widgets)) {
         $this->view->exposed_widgets = array_diff_key($this->view->exposed_widgets, $filters);
-        unset($this->view->exposed_widgets['actions']);
+        $this->view->exposed_widgets['actions']['submit']['#attributes']['style'][] = 'display:none;';
+        $this->view->exposed_widgets['actions']['reset']['#attributes']['style'][] = 'display:none;';
       }
 
       // Reset the options for the next build.
