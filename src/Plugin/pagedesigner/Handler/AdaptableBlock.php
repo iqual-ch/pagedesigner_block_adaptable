@@ -152,6 +152,11 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
 
           $filter = $filterManager->getInstance(['type' => $item['type']])[0];
           $fields[$key] = $filter->serialize($item['value']);
+
+          if (!is_array($fields[$key])) {
+            $value = $fields[$key];
+            $fields[$key] = [$value];
+          }
         }
       }
       if (!empty($settings['pager'])) {
