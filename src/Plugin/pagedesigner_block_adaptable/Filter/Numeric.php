@@ -4,6 +4,7 @@ namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptabl
 
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
+use Drupal\Core\Language\LanguageInterface;
 
 /**
  * Process entities of type "numeric".
@@ -40,18 +41,26 @@ class Numeric extends FilterPluginBase {
       $filters = [];
     }
     if ($filter['field'] == 'nid') {
-      $nodes = [];
+      $langcode = \Drupal::languageManager()
+        ->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE)
+        ->getId();
       if ($bundleFilter) {
         $bundles = [];
         foreach ($bundleFilter['value'] as $key => $option) {
           $bundles[] = $key;
         }
-        $result = \Drupal::database()->query("SELECT title, nid FROM node_field_data WHERE type in (:types[])", [
-          ':types[]' => $bundles,
-        ]);
+        $result = \Drupal::database()->query(
+          "SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = ':langcode' OR default_langcode = 1) AND type in (:types[]) ORDER BY default_langcode ASC) as sub GROUP BY nid ORDER BY nid ASC",
+          [
+            ':langcode' => $langcode,
+            ':types[]' => $bundles,
+          ]);
       }
       else {
-        $result = \Drupal::database()->query("SELECT title, nid FROM node_field_data");
+        $result = \Drupal::database()->query("SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = ':langcode' OR default_langcode = 1) ORDER BY default_langcode ASC) as sub GROUP BY nid ORDER BY nid ASC",
+        [
+          ':langcode' => $langcode,
+        ]);
       }
       $options = [];
       $values = [];
@@ -77,7 +86,7 @@ class Numeric extends FilterPluginBase {
       $bundle = substr($filter['field'], 6, -10);
       $label = $filter['expose']['label'];
       $items = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
-        'type' => $bundle
+        'type' => $bundle,
       ]);
       $options = [];
       $values = [];
@@ -137,7 +146,7 @@ class Numeric extends FilterPluginBase {
           $options[$item->id()] = $item->label();
           // Support for the commerce variation entity type.
           if ($entity_type == 'commerce_product_variation') {
-            /** @var ProductVariation $variation */
+            /** @var \Drupal\commerce_product\Entity\ProductVariation $variation */
             $variation = ProductVariation::load($item->id());
             // If it is a variation, get the label and SKU from the variation
             // instead of only the product label, since it will be the same for

@@ -22,13 +22,20 @@ class TaxonomyIndex extends FilterPluginBase {
    */
   public function build(array $filter) {
     $label = \Drupal::service('entity_type.manager')->getStorage('taxonomy_vocabulary')->load($filter['vid'])->label();
-    $terms =  $query = \Drupal::entityQuery('taxonomy_term')->condition('vid', $filter['vid'])->execute();
+    $terms = \Drupal::entityQuery('taxonomy_term')->condition('vid', $filter['vid'])->execute();
     $options = [];
     $values = [];
+    $langcode = \Drupal::languageManager()
+      ->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE)
+      ->getId();
     foreach ($terms as $option) {
-      $result = \Drupal::database()->query("SELECT t.name FROM {taxonomy_term_field_data} t WHERE t.tid = :tid", [
-        'tid' => $option,
-      ]);
+      $result = \Drupal::database()->query(
+        "SELECT name (SELECT name, tid FROM taxonomy_term_field_data WHERE tid = :tid and (langcode = :langcode OR default_langcode = 1) ORDER BY default_langcode ASC) as sub GROUP BY tid",
+        [
+          ':tid' => $option,
+          ':langcode' => $langcode,
+        ]
+      );
       $term = $result->fetch();
       if ($term) {
         $options[$option] = $term->name;
@@ -52,7 +59,7 @@ class TaxonomyIndex extends FilterPluginBase {
     $result = [];
     foreach ($value as $filter_key => $item) {
       $term = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term')->load($filter_key);
-      if ($term!= NULL) {
+      if ($term != NULL) {
         if ($item) {
           $result[$filter_key] = $filter_key;
         }

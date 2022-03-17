@@ -2,9 +2,8 @@
 
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
-use Drupal\pagedesigner\Entity\Element;
-use Drupal\pagedesigner\Plugin\FieldHandlerBase;
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
+use Drupal\Core\Language\LanguageInterface;
 
 /**
  * Process entities of type "NID Filter".
@@ -34,17 +33,26 @@ class NidFilter extends FilterPluginBase {
         $bundleFilter = NULL;
       }
     }
+    $langcode = \Drupal::languageManager()
+      ->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE)
+      ->getId();
     if ($bundleFilter) {
       $bundles = [];
       foreach ($bundleFilter['value'] as $key => $option) {
         $bundles[] = $key;
       }
-      $result = \Drupal::database()->query("SELECT title, nid FROM node_field_data WHERE type in (:types[])", [
-        ':types[]' => $bundles,
-      ]);
+      $result = \Drupal::database()->query(
+        "SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = ':langcode' OR default_langcode = 1) AND type in (:types[]) ORDER BY default_langcode ASC) as sub GROUP BY nid ORDER BY nid ASC",
+        [
+          ':langcode' => $langcode,
+          ':types[]' => $bundles,
+        ]);
     }
     else {
-      $result = \Drupal::database()->query("SELECT title, nid FROM node_field_data");
+      $result = \Drupal::database()->query("SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = ':langcode' OR default_langcode = 1) ORDER BY default_langcode ASC) as sub GROUP BY nid ORDER BY nid ASC",
+      [
+        ':langcode' => $langcode,
+      ]);
     }
     $options = [];
     $values = [];
@@ -73,7 +81,7 @@ class NidFilter extends FilterPluginBase {
     $result = [];
     foreach ($value as $filter_key => $item) {
       $node = \Drupal::service('entity_type.manager')->getStorage('node')->load($filter_key);
-      if ($node!= NULL) {
+      if ($node != NULL) {
         if ($item) {
           $result[$filter_key] = $filter_key;
         }
