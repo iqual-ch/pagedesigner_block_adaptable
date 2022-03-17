@@ -2,8 +2,6 @@
 
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
-use Drupal\pagedesigner\Entity\Element;
-use Drupal\pagedesigner\Plugin\FieldHandlerBase;
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
 
 /**
@@ -23,7 +21,7 @@ class Boolean extends FilterPluginBase {
    * {@inheritDoc}
    */
   public function build(array $filter) {
-    $storage_definitions = \Drupal::service('entity_type.manager')->getFieldStorageDefinitions('node');
+    $storage_definitions = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('node');
 
     if (!empty($storage_definitions[$filter['field']])) {
       $label = (string) $storage_definitions[$filter['field']]->getLabel();
