@@ -3,6 +3,7 @@
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
+use Drupal\Core\Language\LanguageInterface;
 
 /**
  * Process entities of type "taxonomyIndex".
