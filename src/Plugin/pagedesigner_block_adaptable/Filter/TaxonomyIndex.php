@@ -31,7 +31,7 @@ class TaxonomyIndex extends FilterPluginBase {
       ->getId();
     foreach ($terms as $option) {
       $result = \Drupal::database()->query(
-        "SELECT name (SELECT name, tid FROM taxonomy_term_field_data WHERE tid = :tid and (langcode = :langcode OR default_langcode = 1) ORDER BY default_langcode ASC) as sub GROUP BY tid",
+        "SELECT name FROM (SELECT name, tid FROM taxonomy_term_field_data WHERE tid = :tid and (langcode = :langcode OR default_langcode = 1) ORDER BY default_langcode ASC) as sub GROUP BY tid",
         [
           ':tid' => $option,
           ':langcode' => $langcode,
