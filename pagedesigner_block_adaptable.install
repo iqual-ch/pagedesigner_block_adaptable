@@ -7,20 +7,26 @@
 use Drupal\pagedesigner\Entity\Element;
 
 /**
+ * Add the "filters" key on settings.
  *
+ * @return void
  */
 function pagedesigner_block_adaptable_update_8001() {
   $pids = \Drupal::entityQuery('pagedesigner_element')->condition('field_block_settings', '', 'NOT LIKE')->execute();
   foreach ($pids as $pid) {
     $element = Element::load($pid);
     $settings = json_decode($element->field_block_settings->value);
-    $element->field_block_settings->value = json_encode(['filters' => $settings]);
-    $element->save();
+    if (!isset($settings['filters'])) {
+      $element->field_block_settings->value = json_encode(['filters' => $settings]);
+      $element->save();
+    }
   }
 }
 
 /**
+ * Remove empty keys from block settings.
  *
+ * @return void
  */
 function pagedesigner_block_adaptable_update_8002() {
   foreach (\Drupal::entityTypeManager()->getStorage('pagedesigner_element')->loadByProperties(['type' => 'block']) as $block) {
