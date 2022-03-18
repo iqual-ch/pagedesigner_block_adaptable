@@ -18,3 +18,28 @@ function pagedesigner_block_adaptable_update_8001() {
     $element->save();
   }
 }
+
+/**
+ *
+ */
+function pagedesigner_block_adaptable_update_8002() {
+  foreach (\Drupal::entityTypeManager()->getStorage('pagedesigner_element')->loadByProperties(['type' => 'block']) as $block) {
+    $blocksettings = json_decode($block->field_block_settings->value, 1);
+    $update = FALSE;
+    if ($blocksettings && array_key_exists('filters', $blocksettings) && is_array($blocksettings['filters'])) {
+      foreach ($blocksettings['filters'] as $key => $filter) {
+        foreach ($blocksettings['filters'][$key]['value'] as $termId => $termValue) {
+          if (!$termValue) {
+            unset($blocksettings['filters'][$key]['value'][$termId]);
+            $update = TRUE;
+          }
+        }
+      }
+    }
+
+    if ($update) {
+      $block->field_block_settings = json_encode($blocksettings);
+      $block->save();
+    }
+  }
+}
