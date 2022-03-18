@@ -50,14 +50,14 @@ class Numeric extends FilterPluginBase {
           $bundles[] = $key;
         }
         $result = \Drupal::database()->query(
-          "SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = ':langcode' OR default_langcode = 1) AND type in (:types[]) ORDER BY default_langcode ASC) as sub GROUP BY nid ORDER BY nid ASC",
+          "SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = ':langcode' OR default_langcode = 1) AND type in (:types[]) ORDER BY default_langcode ASC) as sub GROUP BY nid ORDER BY title ASC",
           [
             ':langcode' => $langcode,
             ':types[]' => $bundles,
           ]);
       }
       else {
-        $result = \Drupal::database()->query("SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = ':langcode' OR default_langcode = 1) ORDER BY default_langcode ASC) as sub GROUP BY nid ORDER BY nid ASC",
+        $result = \Drupal::database()->query("SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = ':langcode' OR default_langcode = 1) ORDER BY default_langcode ASC) as sub GROUP BY title ORDER BY nid ASC",
         [
           ':langcode' => $langcode,
         ]);
