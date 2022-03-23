@@ -153,7 +153,7 @@ class Numeric extends FilterPluginBase {
    * {@inheritDoc}
    */
   public function serialize($value) {
-    return ['value' => $value];
+    return [$value];
   }
 
 }
