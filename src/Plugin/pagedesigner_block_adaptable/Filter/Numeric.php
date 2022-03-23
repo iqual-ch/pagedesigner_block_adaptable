@@ -4,7 +4,7 @@ namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptabl
 
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
-use Drupal\Core\Language\LanguageInterface;
+use Drupal\pagedesigner_block_adaptable\Plugin\views\filter\NidViewsFilter;
 
 /**
  * Process entities of type "numeric".
@@ -41,38 +41,8 @@ class Numeric extends FilterPluginBase {
       $filters = [];
     }
     if ($filter['field'] == 'nid') {
-      $langcode = \Drupal::languageManager()
-        ->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE)
-        ->getId();
-      if ($bundleFilter) {
-        $bundles = [];
-        foreach ($bundleFilter['value'] as $key => $option) {
-          $bundles[] = $key;
-        }
-        $result = \Drupal::database()->query(
-          "SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = :langcode OR default_langcode = 1) AND type in (:types[]) ORDER BY default_langcode ASC) as sub GROUP BY nid ORDER BY title ASC",
-          [
-            ':langcode' => $langcode,
-            ':types[]' => $bundles,
-          ]);
-      }
-      else {
-        $result = \Drupal::database()->query("SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = :langcode OR default_langcode = 1) ORDER BY default_langcode ASC) as sub GROUP BY title ORDER BY nid ASC",
-        [
-          ':langcode' => $langcode,
-        ]);
-      }
-      $options = [];
-      $values = [];
-      if ($result) {
-        // while($row = $result->fetchObj()) {.
-        foreach ($result as $row) {
-          if (!empty($row->title)) {
-            $options[$row->nid] = $row->title;
-            $values[] = $row->nid;
-          }
-        }
-      }
+      $options = NidViewsFilter::getOptions($bundleFilter);
+      $values = array_keys($options);
       return [
         'description' => 'Choose node',
         'label' => $filter['expose']['label'],

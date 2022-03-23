@@ -5,7 +5,6 @@ namespace Drupal\pagedesigner_block_adaptable\Plugin\views\filter;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\filter\InOperator;
 use Drupal\views\ViewExecutable;
-use Drupal\views\Views;
 
 /**
  * Filters by nid or status of project.
@@ -50,18 +49,37 @@ class NidViewsFilter extends InOperator {
       }
     }
     if (isset($bundleFilter)) {
+      return static::getOptions($bundleFilter);
+    }
+    return [];
+  }
+
+  /**
+   *
+   */
+  public static function getOptions($bundleFilter) {
+    $options = [];
+    $langcode = \Drupal::languageManager()
+      ->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE)
+      ->getId();
+    if ($bundleFilter) {
       $bundles = [];
       foreach ($bundleFilter['value'] as $key => $option) {
         $bundles[] = $key;
       }
-      $result = \Drupal::database()->query("SELECT title, nid FROM node_field_data WHERE type in (:types[])", [
+      $result = \Drupal::database()->query(
+      "SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = :langcode OR default_langcode = 1) AND type in (:types[]) ORDER BY default_langcode ASC LIMIT 9999999) as sub GROUP BY nid ORDER BY title ASC",
+      [
+        ':langcode' => $langcode,
         ':types[]' => $bundles,
       ]);
     }
     else {
-      $result = \Drupal::database()->query("SELECT title, nid FROM node_field_data");
+      $result = \Drupal::database()->query("SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = :langcode OR default_langcode = 1) ORDER BY default_langcode ASC LIMIT 9999999) as sub GROUP BY title ORDER BY nid ASC",
+      [
+        ':langcode' => $langcode,
+      ]);
     }
-    $options = [];
     if ($result) {
       foreach ($result as $row) {
         if (!empty($row->title)) {
