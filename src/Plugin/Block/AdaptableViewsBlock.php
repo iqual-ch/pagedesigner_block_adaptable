@@ -56,11 +56,16 @@ class AdaptableViewsBlock extends ViewsBlock {
       // Build the view.
       $build = parent::build();
 
+      // Hide the exposed filters and submit button.
+      if (is_array($this->view->exposed_widgets)) {
+        $this->view->exposed_widgets = array_diff_key($this->view->exposed_widgets, $filters);
+        $this->view->exposed_widgets['actions']['submit']['#attributes']['style'][] = 'display:none;';
+        $this->view->exposed_widgets['actions']['reset']['#attributes']['style'][] = 'display:none;';
+      }
+
       // Reset the options for the next build.
       $this->view->getDisplay()->overrideOption('filters', $filters);
       $this->view->getDisplay()->overrideOption('pager', $pager);
-      // Hide the exposed filters, since there are not any in the pagedesigner adaptable block.
-      $this->view->exposed_widgets = NULL;
     }
     else {
       $build = parent::build();
@@ -87,7 +92,8 @@ class AdaptableViewsBlock extends ViewsBlock {
         $filterPlugin = $filterManager->getInstance(['type' => $filters[$key]['plugin_id']])[0];
         if ($filters[$key]['plugin_id'] == 'numeric') {
           $filters[$key]['value']['value'] = $filterPlugin->patch($filter['value']);
-        } else {
+        }
+        else {
           $filters[$key]['value'] = $filterPlugin->patch($filter['value']);
         }
       }
