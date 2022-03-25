@@ -114,7 +114,7 @@ class Numeric extends FilterPluginBase {
         $database = \Drupal::database();
         $table_name = $entity_type . '_field_data';
         $query = $database->select($table_name, 'u');
-        if ($entity_type == "commerce_produc") {
+        if ($entity_type == "commerce_product") {
           $query->fields('u', ['product_id', 'title']);
           $result = $query->execute();
           foreach ($result as $record) {
