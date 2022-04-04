@@ -3,7 +3,7 @@
 namespace Drupal\pagedesigner_block_adaptable\Plugin\pagedesigner_block_adaptable\Filter;
 
 use Drupal\pagedesigner_block_adaptable\Plugin\FilterPluginBase;
-use Drupal\Core\Language\LanguageInterface;
+use Drupal\pagedesigner_block_adaptable\Plugin\views\filter\NidViewsFilter;
 
 /**
  * Process entities of type "NID Filter".
@@ -33,37 +33,8 @@ class NidFilter extends FilterPluginBase {
         $bundleFilter = NULL;
       }
     }
-    $langcode = \Drupal::languageManager()
-      ->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE)
-      ->getId();
-    if ($bundleFilter) {
-      $bundles = [];
-      foreach ($bundleFilter['value'] as $key => $option) {
-        $bundles[] = $key;
-      }
-      $result = \Drupal::database()->query(
-        "SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = :langcode OR default_langcode = 1) AND type in (:types[]) ORDER BY default_langcode ASC) as sub GROUP BY nid ORDER BY title ASC",
-        [
-          ':langcode' => $langcode,
-          ':types[]' => $bundles,
-        ]);
-    }
-    else {
-      $result = \Drupal::database()->query("SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = :langcode OR default_langcode = 1) ORDER BY default_langcode ASC) as sub GROUP BY nid ORDER BY title ASC",
-      [
-        ':langcode' => $langcode,
-      ]);
-    }
-    $options = [];
-    $values = [];
-    if ($result) {
-      foreach ($result as $row) {
-        if (!empty($row->title)) {
-          $options[$row->nid] = $row->title;
-          $values[$row->nid] = FALSE;
-        }
-      }
-    }
+    $options = NidViewsFilter::getOptions($bundleFilter);
+    $values = array_keys($options);
     return [
       'description' => 'Choose node',
       'label' => $filter['expose']['label'],
