@@ -50,7 +50,12 @@ class NidViewsFilter extends InOperator {
       }
     }
     if (isset($bundleFilter)) {
-      return static::getOptions($bundleFilter);
+      $data = static::getData($bundleFilter, ['title'], $bundleFilter);
+      $options = [];
+      foreach ($data as $key => $record) {
+        $options[$key] = $record->title;
+      }
+      return $options;
     }
     return [];
   }
@@ -58,35 +63,36 @@ class NidViewsFilter extends InOperator {
   /**
    *
    */
-  public static function getOptions($bundleFilter) {
+  public static function getData(array $filter, array $fields, array $bundleFilter = NULL) {
     $options = [];
+    $table = $filter['table'];
+    $idField = $filter['entity_field'];
+    $selectFields = $fields;
+    $selectFields[] = $idField;
     $langcode = \Drupal::languageManager()
       ->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE)
       ->getId();
-    if ($bundleFilter) {
+    $database = \Drupal::database();
+    $query = $database->select($table, 'u');
+    $query->fields('u', $selectFields);
+    $orGroup = $query->orConditionGroup()
+      ->condition('langcode', $langcode, 'LIKE')
+      ->condition('default_langcode', 1);
+    $query->condition($orGroup);
+    $query->orderBy('default_langcode', 'DESC');
+    foreach ($fields as $field) {
+      $query->orderBy($field, 'ASC');
+    }
+    if (!empty($bundleFilter)) {
       $bundles = [];
       foreach ($bundleFilter['value'] as $key => $option) {
         $bundles[] = $key;
       }
-      $result = \Drupal::database()->query(
-      "SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = :langcode OR default_langcode = 1) AND type in (:types[]) ORDER BY default_langcode ASC LIMIT 9999999) as sub GROUP BY nid ORDER BY title ASC",
-      [
-        ':langcode' => $langcode,
-        ':types[]' => $bundles,
-      ]);
+      $query->condition($bundleFilter['entity_field'], $bundles, 'IN');
     }
-    else {
-      $result = \Drupal::database()->query("SELECT title, nid, langcode FROM (SELECT title, nid, langcode FROM node_field_data WHERE (langcode = :langcode OR default_langcode = 1) ORDER BY default_langcode ASC LIMIT 9999999) as sub GROUP BY title ORDER BY nid ASC",
-      [
-        ':langcode' => $langcode,
-      ]);
-    }
-    if ($result) {
-      foreach ($result as $row) {
-        if (!empty($row->title)) {
-          $options[$row->nid] = $row->title;
-        }
-      }
+    $result = $query->execute()->fetchAll();
+    foreach ($result as $record) {
+      $options[$record->{$idField}] = $record;
     }
     return $options;
   }

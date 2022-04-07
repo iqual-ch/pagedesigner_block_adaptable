@@ -23,38 +23,50 @@ class Numeric extends FilterPluginBase {
    * {@inheritDoc}
    */
   public function build(array $filter) {
-    if (isset($filter['bundle_filter'])) {
-      $bundleFilter = $filter['bundle_filter'];
-    }
-    else {
-      if (!empty($filter['filters']['type'])) {
-        $bundleFilter = $filter['filters']['type'];
+    $entityType = (!empty($filter['entity_type'])) ? $filter['entity_type'] : NULL;
+    if ($entityType != NULL) {
+      $options = [];
+      $values = [];
+      $bundleFilter = NULL;
+      if ($entityType == 'taxonomy_term') {
+        if (!empty($filter['filters']['vid'])) {
+          $bundleFilter = $filter['filters']['vid'];
+        }
+        $filter['entity_field'] = 'tid';
+        $data = NidViewsFilter::getData($filter, ['name'], $bundleFilter);
+        foreach ($data as $key => $record) {
+          $options[$key] = $record->name;
+        }
       }
       else {
-        $bundleFilter = NULL;
+        if (!empty($filter['filters']['type'])) {
+          $bundleFilter = $filter['filters']['type'];
+        }
+        if ($entityType == "commerce_product_variation") {
+          $data = NidViewsFilter::getData($filter, ['title', 'sku'], $bundleFilter);
+          foreach ($data as $key => $record) {
+            $options[$key] = $record->title . ' - ' . $record->sku;
+          }
+        }
+        else {
+          $data = NidViewsFilter::getData($filter, ['title'], $bundleFilter);
+          foreach ($data as $key => $record) {
+            $options[$key] = $record->title;
+          }
+        }
+        $values = array_keys($data);
+        return [
+          'description' => t('Choose @label', ['@label' => $filter['expose']['label']]),
+          'label' => $filter['expose']['label'],
+          'options' => $options,
+          'type' => 'select',
+          'name' => $filter['field'],
+          'value' => $values,
+        ];
       }
-    }
-    if (isset($filter['filters'])) {
-      $filters = $filter['filters'];
-    }
-    else {
-      $filters = [];
-    }
-    if ($filter['field'] == 'nid') {
-      $options = NidViewsFilter::getOptions($bundleFilter);
-      $values = array_keys($options);
-      return [
-        'description' => 'Choose node',
-        'label' => $filter['expose']['label'],
-        'options' => $options,
-        'type' => 'select',
-        'name' => $filter['field'],
-        'value' => $values,
-      ];
     }
     elseif (substr($filter['field'], -10) == '_target_id' && substr($filter['field'], 0, 6) == 'field_') {
       $bundle = substr($filter['field'], 6, -10);
-      $label = $filter['expose']['label'];
       $items = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
         'type' => $bundle,
       ]);
@@ -66,7 +78,7 @@ class Numeric extends FilterPluginBase {
         }
       }
       return [
-        'description' => 'Choose ' . $label,
+        'description' => t('Choose @label', ['@label' => $filter['expose']['label']]),
         'label' => $filter['expose']['label'],
         'options' => $options,
         'type' => 'select',
@@ -74,72 +86,10 @@ class Numeric extends FilterPluginBase {
         'value' => $values,
       ];
     }
-    elseif ($filter['field'] == 'tid_raw') {
-      if (isset($filters['vid'])) {
-        $options = [];
-        $values = [];
-        foreach ($filters['vid']['value'] as $vid => $vocabulary) {
-          $terms = \Drupal::service('entity_type.manager')
-            ->getStorage('taxonomy_term')
-            ->loadTree($vid);
-
-          foreach ($terms as $term) {
-            if ($term != NULL) {
-              $options[$term->tid] = $term->name;
-            }
-          }
-        }
-        return [
-          'description' => 'Choose term',
-          'label' => $filter['expose']['label'],
-          'options' => $options,
-          'type' => 'select',
-          'name' => $filter['field'],
-          'value' => $values,
-        ];
-      }
-      else {
-        return [
-          'label' => $filter['field'],
-          'type' => 'text',
-        ];
-      }
-    }
-    elseif (substr($filter['field'], -3) == '_id') {
-      $entity_type = $filter['entity_type'];
-      $label = substr($filter['field'], 0, -3);
-      $items = \Drupal::entityTypeManager()->getStorage($entity_type)->loadMultiple();
-      $options = [];
-      $values = [];
-      foreach ($items as $item) {
-        if ($item != NULL) {
-          $options[$item->id()] = $item->label();
-          // Support for the commerce variation entity type.
-          if ($entity_type == 'commerce_product_variation') {
-            /** @var \Drupal\commerce_product\Entity\ProductVariation $variation */
-            $variation = ProductVariation::load($item->id());
-            // If it is a variation, get the label and SKU from the variation
-            // instead of only the product label, since it will be the same for
-            // each variation.
-            $options[$item->id()] = $variation->label() . ' - ' . $variation->getSku();
-          }
-        }
-      }
-      return [
-        'description' => 'Choose ' . $label,
-        'label' => $filter['expose']['label'],
-        'options' => $options,
-        'type' => 'select',
-        'name' => $filter['field'],
-        'value' => $values,
-      ];
-    }
-    else {
-      return [
-        'label' => $filter['field'],
-        'type' => 'text',
-      ];
-    }
+    return [
+      'label' => $filter['field'],
+      'type' => 'text',
+    ];
   }
 
   /**
