@@ -94,9 +94,10 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
       if ($filter['plugin_id'] == 'numeric' || $filter['plugin_id'] == 'nid_views_filter') {
         $filter['filters'] = $filters;
       }
-      if (empty($filter['exposed'])) {
+      if (empty($filter['exposed']) && strpos($filter['id'], 'pba_') === FALSE) {
         continue;
       }
+
       // Create multiple choice for the bundle plugin type.
       // Workaround for the content type, because there
       // can not be a key named 'type' in the definition.
@@ -104,7 +105,7 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
         $fields['content_type'] = $filterPlugin->build($filter);
       }
       else {
-        $fields[$filter['field']] = $filterPlugin->build($filter);
+        $fields[$filter['id']] = $filterPlugin->build($filter);
       }
     }
     $pager = $view->getDisplay()->getOption('pager');
@@ -152,11 +153,6 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
 
           $filter = $filterManager->getInstance(['type' => $item['type']])[0];
           $fields[$key] = $filter->serialize($item['value']);
-
-          if (!is_array($fields[$key])) {
-            $value = $fields[$key];
-            $fields[$key] = [$value];
-          }
         }
       }
       if (!empty($settings['pager'])) {
@@ -207,8 +203,8 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
 
       foreach ($data['fields'] as $key => $value) {
         if (isset($filters[$key])) {
-          $filter = $filterManager->getInstance(['type' => $filters[$key]['plugin_id']])[0];
-          $view_filters[$key]['value'] = $filter->patch($value);
+          $handler = $filterManager->getInstance(['type' => $filters[$key]['plugin_id']])[0];
+          $view_filters[$key]['value'] = $handler->patch($filters[$key], $value);
           $view_filters[$key]['type'] = $filters[$key]['plugin_id'];
         }
         elseif ($key == 'content_type') {

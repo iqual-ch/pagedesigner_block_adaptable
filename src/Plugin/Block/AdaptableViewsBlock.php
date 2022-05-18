@@ -91,10 +91,10 @@ class AdaptableViewsBlock extends ViewsBlock {
       if (isset($filters[$key])) {
         $filterPlugin = $filterManager->getInstance(['type' => $filters[$key]['plugin_id']])[0];
         if ($filters[$key]['plugin_id'] == 'numeric') {
-          $filters[$key]['value']['value'] = $filterPlugin->patch($filter['value']);
+          $filters[$key]['value']['value'] = $filterPlugin->patch($filters[$key], $filter['value']);
         }
         else {
-          $filters[$key]['value'] = $filterPlugin->patch($filter['value']);
+          $filters[$key]['value'] = $filterPlugin->patch($filters[$key], $filter['value']);
         }
       }
       elseif ($key == 'content_type') {

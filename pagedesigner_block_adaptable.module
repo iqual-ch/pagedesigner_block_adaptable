@@ -1,16 +1,27 @@
 <?php
 
+use Drupal\Core\Entity\ContentEntityType;
+
 /**
- * Implements hook_views_data_alter().
+ * Implements hook_views_data().
  */
-function pagedesigner_block_adaptable_views_data_alter(array &$data) {
-  $data['node']['nid'] = [
-    'title' => t('NID filter'),
+function pagedesigner_block_adaptable_views_data() {
+  $data = [];
+  $definition = [
+    'title' => t('Entity filter - Custom Filter'),
     'filter' => [
-      'title' => t('NID filter'),
-      'help' => t('Provides a custom filter for project nodes by their nid.'),
-      'field' => 'nid',
-      'id' => 'nid_views_filter',
-    ],
+      'title' => t('Entity id - Custom Filter'),
+      'field' => 'id',
+      'id' => 'pba_entity_filter',
+    ]
   ];
+  $entityTypes = \Drupal::entityTypeManager()->getDefinitions();
+  foreach($entityTypes as $type) {
+    $type = \Drupal::entityTypeManager()->getDefinition($type->id());
+    if ($type instanceof ContentEntityType) {
+      $data[$type->getDataTable()]['pba_entity_filter'] = $definition;
+      $data[$type->getDataTable()]['pba_entity_filter']['entity field'] = $type->getKey('id');
+    }
+  }
+  return $data;
 }

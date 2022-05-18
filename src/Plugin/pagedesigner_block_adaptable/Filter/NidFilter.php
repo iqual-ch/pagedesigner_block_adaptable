@@ -16,68 +16,29 @@ use Drupal\pagedesigner_block_adaptable\Plugin\views\filter\NidViewsFilter;
  *   }
  * )
  */
-class NidFilter extends FilterPluginBase {
+class NidFilter extends EntityFilter {
 
   /**
    * {@inheritDoc}
    */
-  public function build(array $filter) {
-    if (isset($filter['bundle_filter'])) {
-      $bundleFilter = $filter['bundle_filter'];
+  public function build(array $filter) : array {
+    if (empty($filter['pagedesigner_trait_type'])) {
+      $filter['pagedesigner_trait_type'] = 'multiplecheckbox';
     }
-    else {
-      if (!empty($filter['filters']['type'])) {
-        $bundleFilter = $filter['filters']['type'];
-      }
-      else {
-        $bundleFilter = NULL;
-      }
+    if (empty($filter['entity_type'])) {
+      $filter['entity_type'] = 'node';
     }
-    $options = NidViewsFilter::getOptions($bundleFilter);
-    $values = array_keys($options);
-    return [
-      'description' => 'Choose node',
-      'label' => $filter['expose']['label'],
-      'options' => $options,
-      'type' => 'multiplecheckbox',
-      'name' => $filter['field'],
-      'value' => $values,
-    ];
+    return parent::build($filter);
   }
 
   /**
    * {@inheritDoc}
    */
-  public function patch($value) {
-    $result = [];
-    foreach ($value as $filter_key => $item) {
-      $node = \Drupal::service('entity_type.manager')->getStorage('node')->load($filter_key);
-      if ($node != NULL) {
-        if ($item) {
-          $result[$filter_key] = $filter_key;
-        }
-        else {
-          $result[$filter_key] = FALSE;
-        }
-      }
+  public function patch($filter, $value) {
+    if (empty($filter['entity_type'])) {
+      $filter['entity_type'] = 'node';
     }
-    return $result;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function serialize($value) {
-    $values = [];
-    foreach ($value as $key => $item) {
-      if ($item != FALSE) {
-        $values[$key] = TRUE;
-      }
-      else {
-        $values[$key] = FALSE;
-      }
-    }
-    return $values;
+    return parent::patch($filter, $value);
   }
 
 }
