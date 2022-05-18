@@ -66,29 +66,14 @@ class EntityFilter extends FilterPluginBase {
         }
       }
       $values = array_keys($data);
-      $selection_settings = [
-        'target_bundles' => ($bundles) ?: NULL,
-        'sort' => ['field' => "_none", 'direction' => 'ASC'],
-        'auto_create' => FALSE,
-        'auto_create_bundle' => '',
-        'match_operator' => 'CONTAINS',
-        'match_limit' => 10
-      ];
-      $data = serialize($selection_settings) . $type->id() . 'default:' . $type->id();
-      $selection_settings_key = Crypt::hmacBase64($data, \Drupal\Core\Site\Settings::getHashSalt());
-      $key_value_storage = \Drupal::keyValue('entity_autocomplete');
-      if (!$key_value_storage->has($selection_settings_key)) {
-          $key_value_storage->set($selection_settings_key, $selection_settings);
-      }
-      $url = '/de/entity_reference_autocomplete/'. $type->id() . '/default:' . $type->id(). '/' . $selection_settings_key;
       $renderArray = [
         'description' => t('Choose @label', ['@label' => $filter['expose']['label']])->__toString(),
         'label' => $filter['expose']['label'],
         'options' => $options,
-        'type' => 'autocomplete', // $filter['pagedesigner_trait_type'],
+        'type' => 'autocomplete',
         'name' => $filter['id'],
         'value' => $values,
-        'additional' => ['autocomplete_href' => $url],
+        'additional' => ['autocomplete' => ['entity_type' => $type->id(), 'bundles' => $bundles]],
       ];
     }
     return $renderArray;
