@@ -13,7 +13,7 @@ abstract class FilterPluginBase extends PluginBase implements FilterPluginInterf
   /**
    * {@inheritDoc}
    */
-  public function serialize($value) : array {
+  public function serialize(array $value, array $filterDefinition = NULL) : array {
     if (!is_array($value)) {
       $value = [$value];
     }

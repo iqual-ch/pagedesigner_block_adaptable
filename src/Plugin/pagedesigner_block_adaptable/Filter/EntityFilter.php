@@ -70,11 +70,18 @@ class EntityFilter extends FilterPluginBase {
         'description' => t('Choose @label', ['@label' => $filter['expose']['label']])->__toString(),
         'label' => $filter['expose']['label'],
         'options' => $options,
-        'type' => 'autocomplete',
+        'type' => $filter['pagedesigner_trait_type'],
         'name' => $filter['id'],
         'value' => $values,
-        'additional' => ['autocomplete' => ['entity_type' => $type->id(), 'bundles' => $bundles]],
       ];
+      if ($filter['pagedesigner_trait_type'] == 'autocomplete') {
+        $renderArray['additional'] = [
+          'autocomplete' => [
+            'entity_type' => $type->id(),
+            'bundles' => $bundles
+            ]
+        ];
+      }
     }
     return $renderArray;
   }
@@ -84,6 +91,17 @@ class EntityFilter extends FilterPluginBase {
    */
   public function patch($filter, $value) {
     $result = [];
+    if ($filter['pagedesigner_trait_type'] == 'autocomplete') {
+      if (!empty($value['id'])) {
+        $value = [$value['id'] => $value['id']];
+      }
+      elseif (is_numeric(reset($value))) {
+        $value = [reset($value) => reset($value)];
+      }
+      else {
+        $value = [];
+      }
+    }
     $entityType = (!empty($filter['entity_type'])) ? $filter['entity_type'] : NULL;
     $type = \Drupal::entityTypeManager()->getDefinition($entityType);
     $bundles = EntityFilterBase::getBundles($filter);
@@ -96,11 +114,27 @@ class EntityFilter extends FilterPluginBase {
   /**
    * {@inheritDoc}
    */
-  public function serialize($value): array {
+  public function serialize(array $value, array $filterDefinition = NULL): array {
     $values = [];
+    $autocomplete = FALSE;
+    $storageManager = NULL;
+    if (!empty($filterDefinition['pagedesigner_trait_type']) && $filterDefinition['pagedesigner_trait_type'] == 'autocomplete') {
+      $autocomplete = TRUE;
+      $entityType = (!empty($filterDefinition['entity_type'])) ? $filterDefinition['entity_type'] : NULL;
+      $storageManager = \Drupal::entityTypeManager()->getStorage($entityType);
+    }
     foreach ($value as $key => $item) {
       if ($item) {
-        $values[$key] = $key;
+        if ($autocomplete) {
+          $entity = $storageManager->load($key);
+          $values = [
+            'label' => $entity->label(),
+            'value' => $entity->label() . ' (' . $key . ')',
+            'id' => $key
+           ];
+        } else {
+          $values[$key] = $key;  
+        }
       }
       else {
         unset($values[$key]);

@@ -40,6 +40,6 @@ interface FilterPluginInterface {
    * @return array
    *   The serialized value.
    */
-  public function serialize(array $value) : array;
+  public function serialize(array $value, array $filterDefinition = NULL) : array;
 
 }
