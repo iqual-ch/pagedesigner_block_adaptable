@@ -52,29 +52,30 @@ class EntityFilter extends EntityFilterBase {
       '#default_value' => $this->options['pagedesigner_trait_type'],
       '#options'  => [
         'select' => $this->t('Select'),
-        'autocomplete' =>  $this->t('Autocomplete'),
+        'autocomplete' => $this->t('Autocomplete'),
         'multiplecheckbox' => $this->t('Checkboxes'),
       ],
       '#required' => TRUE,
     ];
-    
+
     $form['pagedesigner_required'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Make selection mandatory in pagedesigner.'),
       '#default_value' => $this->options['pagedesigner_required'],
     ];
-    
+
     $form['pagedesigner_multiselect'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Allow multiple items to be selected (only for multiple checkbox and autocomplete).'),
       '#default_value' => $this->options['pagedesigner_multiselect'],
       '#states' => [
         'disabled' => [
-          ':input[name="options[pagedesigner_trait_type]"]' => ['value' => 'select'], 
+          ':input[name="options[pagedesigner_trait_type]"]' => ['value' => 'select'],
+          ':input[name="options[pagedesigner_trait_type]"]' => ['value' => 'autocomplete'],
         ],
-      ]
+      ],
     ];
-    
+
     $entityType = $this->view->getBaseEntityType()->id();
 
     if ($this->options['relationship'] != 'none') {
