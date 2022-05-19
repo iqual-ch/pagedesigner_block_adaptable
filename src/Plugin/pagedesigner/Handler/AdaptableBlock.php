@@ -94,9 +94,10 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
       if ($filter['plugin_id'] == 'numeric' || $filter['plugin_id'] == 'nid_views_filter') {
         $filter['filters'] = $filters;
       }
-      if (empty($filter['exposed'])) {
+      if (empty($filter['exposed']) && strpos($filter['id'], 'pba_') === FALSE) {
         continue;
       }
+
       // Create multiple choice for the bundle plugin type.
       // Workaround for the content type, because there
       // can not be a key named 'type' in the definition.
@@ -104,7 +105,7 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
         $fields['content_type'] = $filterPlugin->build($filter);
       }
       else {
-        $fields[$filter['field']] = $filterPlugin->build($filter);
+        $fields[$filter['id']] = $filterPlugin->build($filter);
       }
     }
     $pager = $view->getDisplay()->getOption('pager');
@@ -143,20 +144,30 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
    * {@inheritDoc}
    */
   public function serialize(Element $entity, &$result = []) {
-    $fields = [];
-    if ($entity->hasField('field_block_settings') && !$entity->field_block_settings->isEmpty()) {
+    $block = $entity->field_block->entity;
+    if ($block != NULL && $entity->hasField('field_block_settings') && !$entity->field_block_settings->isEmpty()) {
+      $fields = [];
+      $view_filters = [];
+      $viewInfo = explode('-', explode(':', $block->get('plugin'))[1]);
+      $view = Views::getView($viewInfo[0]);
+      // Check if there is a view for the block.
+      if ($view == NULL) {
+        return;
+      }
+      $view->setDisplay($viewInfo[1]);
+      $display = $view->getDisplay();
+      if ($display == NULL) {
+        return;
+      }
+      // Take the filter data and apply it to the field of the entity.
+      $filterDefinitions = $display->getOption('filters');
       $settings = json_decode($entity->field_block_settings->value, TRUE);
       $filterManager = \Drupal::service('plugin.manager.pagedesigner_block_adaptable_filter');
       if (!empty($settings['filters'])) {
         foreach ($settings['filters'] as $key => $item) {
-
+          $filterDefinition = !empty($filterDefinitions[$key]) ? $filterDefinitions[$key] : NULL;
           $filter = $filterManager->getInstance(['type' => $item['type']])[0];
-          $fields[$key] = $filter->serialize($item['value']);
-
-          if (!is_array($fields[$key])) {
-            $value = $fields[$key];
-            $fields[$key] = [$value];
-          }
+          $fields[$key] = $filter->serialize($item['value'], $filterDefinition);
         }
       }
       if (!empty($settings['pager'])) {
@@ -164,10 +175,10 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
           $fields['pager_' . $key] = $item['value'];
         }
       }
+      $result = [
+        'fields' => $fields,
+      ] + $result;
     }
-    $result = [
-      'fields' => $fields,
-    ] + $result;
   }
 
   /**
@@ -207,8 +218,8 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
 
       foreach ($data['fields'] as $key => $value) {
         if (isset($filters[$key])) {
-          $filter = $filterManager->getInstance(['type' => $filters[$key]['plugin_id']])[0];
-          $view_filters[$key]['value'] = $filter->patch($value);
+          $handler = $filterManager->getInstance(['type' => $filters[$key]['plugin_id']])[0];
+          $view_filters[$key]['value'] = $handler->patch($filters[$key], $value);
           $view_filters[$key]['type'] = $filters[$key]['plugin_id'];
         }
         elseif ($key == 'content_type') {

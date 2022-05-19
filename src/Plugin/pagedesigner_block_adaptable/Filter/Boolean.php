@@ -20,7 +20,7 @@ class Boolean extends FilterPluginBase {
   /**
    * {@inheritDoc}
    */
-  public function build(array $filter) {
+  public function build(array $filter) : array {
     $storage_definitions = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('node');
 
     if (!empty($storage_definitions[$filter['field']])) {
@@ -42,8 +42,8 @@ class Boolean extends FilterPluginBase {
       'description' => 'Select an option',
       'label' => $label,
       'options' => [
-        '1' => 'Yes',
-        '0' => 'No',
+        '1' => t('Yes'),
+        '0' => t('No'),
       ],
       'type' => 'select',
     ];
@@ -52,7 +52,7 @@ class Boolean extends FilterPluginBase {
   /**
    * {@inheritDoc}
    */
-  public function patch($value) {
+  public function patch($filter, $value) {
     if (is_array($value)) {
       $value = reset($value);
     }
