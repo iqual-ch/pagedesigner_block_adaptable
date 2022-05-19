@@ -58,23 +58,25 @@ class EntityFilter extends EntityFilterBase {
       '#required' => TRUE,
     ];
 
-    $form['pagedesigner_required'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Make selection mandatory in pagedesigner.'),
-      '#default_value' => $this->options['pagedesigner_required'],
-    ];
+    // $form['pagedesigner_required'] = [
+    //   '#type' => 'checkbox',
+    //   '#title' => $this->t('Make selection mandatory in pagedesigner.'),
+    //   '#default_value' => $this->options['pagedesigner_required'],
+    // ];
 
-    $form['pagedesigner_multiselect'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Allow multiple items to be selected (only for multiple checkbox and autocomplete).'),
-      '#default_value' => $this->options['pagedesigner_multiselect'],
-      '#states' => [
-        'disabled' => [
-          ':input[name="options[pagedesigner_trait_type]"]' => ['value' => 'select'],
-          ':input[name="options[pagedesigner_trait_type]"]' => ['value' => 'autocomplete'],
-        ],
-      ],
-    ];
+    // $form['pagedesigner_multiselect'] = [
+    //   '#type' => 'checkbox',
+    //   '#title' => $this->t('Allow multiple items to be selected (only for multiple checkbox).'),
+    //   '#default_value' => $this->options['pagedesigner_multiselect'],
+    //   '#states' => [
+    //     'disabled' => [
+    //       ':input[name="options[pagedesigner_trait_type]"]' =>
+    //       [
+    //         ['value' => 'select'], ['value' => 'autocomplete'],
+    //       ],
+    //     ],
+    //   ],
+    // ];
 
     $entityType = $this->view->getBaseEntityType()->id();
 
