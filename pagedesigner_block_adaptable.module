@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @file
+ */
+
 use Drupal\Core\Entity\ContentEntityType;
 
 /**
@@ -13,12 +17,12 @@ function pagedesigner_block_adaptable_views_data() {
       'title' => t('Entity id - Custom Filter'),
       'field' => 'id',
       'id' => 'pba_entity_filter',
-    ]
+    ],
   ];
   $entityTypes = \Drupal::entityTypeManager()->getDefinitions();
-  foreach($entityTypes as $type) {
+  foreach ($entityTypes as $type) {
     $type = \Drupal::entityTypeManager()->getDefinition($type->id());
-    if ($type instanceof ContentEntityType) {
+    if ($type instanceof ContentEntityType && !empty($type->getDataTable())) {
       $data[$type->getDataTable()]['pba_entity_filter'] = $definition;
       $data[$type->getDataTable()]['pba_entity_filter']['entity field'] = $type->getKey('id');
     }
