@@ -137,7 +137,7 @@ class AdaptableBlock extends PluginBase implements HandlerPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public function getContent(Element $entity, array &$list = [], $published = true) {
+  public function getContent(Element $entity, array &$list = [], $published = TRUE) {
   }
 
   /**
