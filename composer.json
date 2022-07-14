@@ -1,7 +1,7 @@
 {
-  "name": "iqual/pagedesigner_block_adaptable",
+  "name": "drupal/pagedesigner_block_adaptable",
   "description": "Extend the block integration to adapt blocks.",
-  "type": "drupal-custom-module",
+  "type": "drupal-module",
   "homepage": "https://github.com/iqual-ch/pagedesigner_block_adaptable",
   "support": {
     "issues": "https://github.com/iqual-ch/pagedesigner_block_adaptable/issues",
