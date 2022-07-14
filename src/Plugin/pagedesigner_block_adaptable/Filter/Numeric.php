@@ -108,23 +108,37 @@ class Numeric extends FilterPluginBase {
     elseif (substr($filter['field'], -3) == '_id') {
       $entity_type = $filter['entity_type'];
       $label = substr($filter['field'], 0, -3);
-      $items = \Drupal::entityTypeManager()->getStorage($entity_type)->loadMultiple();
       $options = [];
       $values = [];
-      foreach ($items as $item) {
-        if ($item != NULL) {
-          $options[$item->id()] = $item->label();
-          // Support for the commerce variation entity type.
-          if ($entity_type == 'commerce_product_variation') {
-            /** @var \Drupal\commerce_product\Entity\ProductVariation $variation */
-            $variation = ProductVariation::load($item->id());
-            // If it is a variation, get the label and SKU from the variation
-            // instead of only the product label, since it will be the same for
-            // each variation.
-            $options[$item->id()] = $variation->label() . ' - ' . $variation->getSku();
+      if (strpos($entity_type, 'commerce_product') == 0) {
+        $database = \Drupal::database();
+        $table_name = $entity_type . '_field_data';
+        $query = $database->select($table_name, 'u');
+        if ($entity_type == "commerce_product") {
+          $query->fields('u', ['product_id', 'title']);
+          $result = $query->execute();
+          foreach ($result as $record) {
+            $options[$record->product_id] = $record->title;
+          }
+        }
+        if ($entity_type == "commerce_product_variation") {
+          $query_fields = ['variation_id', 'title', 'sku'];
+          $query->fields('u', ['variation_id', 'title', 'sku']);
+          $result = $query->execute();
+          foreach ($result as $record) {
+            $options[$record->variation_id] = $record->title . ' - ' . $record->sku;
           }
         }
       }
+      else {
+        $items = \Drupal::entityTypeManager()->getStorage($entity_type)->loadMultiple();
+        foreach ($items as $item) {
+          if ($item != NULL) {
+            $options[$item->id()] = $item->label();
+          }
+        }
+      }
+      
       return [
         'description' => 'Choose ' . $label,
         'label' => $filter['expose']['label'],
