@@ -20,12 +20,12 @@ class StringFilter extends FilterPluginBase {
   /**
    * {@inheritDoc}
    */
-  public function build(array $filter) {
+  public function build(array $filter) : array {
     if (!empty(\Drupal::service('entity_field.manager')->getFieldStorageDefinitions('node')[$filter['field']])) {
       $label = (string) \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('node')[$filter['field']]->getLabel();
     }
     else {
-      $label = NULL;
+      $label = t('Set value');
     }
 
     return [
@@ -37,14 +37,7 @@ class StringFilter extends FilterPluginBase {
   /**
    * {@inheritDoc}
    */
-  public function patch($value) {
-    return $value;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function serialize($value) {
+  public function patch($filter, $value) {
     return $value;
   }
 

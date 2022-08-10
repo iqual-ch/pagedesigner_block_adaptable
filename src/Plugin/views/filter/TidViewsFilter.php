@@ -2,7 +2,9 @@
 
 namespace Drupal\pagedesigner_block_adaptable\Plugin\views\filter;
 
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
+use Drupal\views\Plugin\views\filter\InOperator;
 use Drupal\views\ViewExecutable;
 
 /**
@@ -10,12 +12,9 @@ use Drupal\views\ViewExecutable;
  *
  * @ingroup views_filter_handlers
  *
- * @ViewsFilter("nid_views_filter")
- * @deprecated in project:2.1.0 and is removed from project:3.0.0 Use
- *   pba_entity_filter instead.
- * @see 
+ * @ViewsFilter("tid_views_filter")
  */
-class NidViewsFilter extends EntityFilterBase {
+class NidViewsFilter extends InOperator {
 
   /**
    * The current display.
@@ -59,6 +58,43 @@ class NidViewsFilter extends EntityFilterBase {
       return $options;
     }
     return [];
+  }
+
+  /**
+   *
+   */
+  public static function getData(array $filter, array $fields, array $bundleFilter = NULL) {
+    $options = [];
+    $table = $filter['table'];
+    $idField = $filter['entity_field'];
+    $selectFields = $fields;
+    $selectFields[] = $idField;
+    $langcode = \Drupal::languageManager()
+      ->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE)
+      ->getId();
+    $database = \Drupal::database();
+    $query = $database->select($table, 'u');
+    $query->fields('u', $selectFields);
+    $orGroup = $query->orConditionGroup()
+      ->condition('langcode', $langcode, 'LIKE')
+      ->condition('default_langcode', 1);
+    $query->condition($orGroup);
+    $query->orderBy('default_langcode', 'DESC');
+    foreach ($fields as $field) {
+      $query->orderBy($field, 'ASC');
+    }
+    if (!empty($bundleFilter)) {
+      $bundles = [];
+      foreach ($bundleFilter['value'] as $key => $option) {
+        $bundles[] = $key;
+      }
+      $query->condition($bundleFilter['entity_field'], $bundles, 'IN');
+    }
+    $result = $query->execute()->fetchAll();
+    foreach ($result as $record) {
+      $options[$record->{$idField}] = $record;
+    }
+    return $options;
   }
 
   /**

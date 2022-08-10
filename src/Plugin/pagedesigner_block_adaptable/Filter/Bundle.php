@@ -22,7 +22,7 @@ class Bundle extends FilterPluginBase {
   /**
    * {@inheritDoc}
    */
-  public function build(array $filter) {
+  public function build(array $filter) : array {
     // Workaround for the content type, because there
     // can not be a key named 'type' in the definition.
     if ($filter['field'] === 'type') {
@@ -40,7 +40,7 @@ class Bundle extends FilterPluginBase {
         'label' => 'Type',
         'options' => $options,
         'type' => 'multiplecheckbox',
-        'name' => 'content_type',
+        'name' => ' ',
         'value' => $values,
       ];
     }
@@ -60,14 +60,14 @@ class Bundle extends FilterPluginBase {
   /**
    * {@inheritDoc}
    */
-  public function patch($value) {
+  public function patch($filter, $value) {
     $result = [];
     foreach ($value as $filter_key => $item) {
       if ($item) {
-        $result[$filter_key] = TRUE;
+        $result[$filter_key] = $filter_key;
       }
       else {
-        $result[$filter_key] = FALSE;
+        unset($result[$filter_key]);
       }
     }
     return $result;
